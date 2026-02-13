@@ -112,21 +112,31 @@ def get_ai_analysis(posts_df, ticker_counts, comments_df, subreddits):
 
     print("\n🤖 Running DeepSeek AI analysis...")
 
-    client = OpenAI(
-        api_key=DEEPSEEK_API_KEY,
-        base_url=DEEPSEEK_BASE_URL,
-    )
+    import httpx
+    # Clear proxy env vars that httpx picks up (socks:// not supported)
+    env_backup = {}
+    for key in ('HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'http_proxy', 'https_proxy', 'all_proxy'):
+        if key in os.environ:
+            env_backup[key] = os.environ.pop(key)
+    try:
+        client = OpenAI(
+            api_key=DEEPSEEK_API_KEY,
+            base_url=DEEPSEEK_BASE_URL,
+        )
+    finally:
+        os.environ.update(env_backup)
 
-    top_tickers = dict(ticker_counts.head(20)) if len(ticker_counts) > 0 else {}
-    top_posts = posts_df.nlargest(10, 'score')[['title', 'subreddit', 'score', 'num_comments']].to_dict('records')
+    top_tickers = {k: int(v) for k, v in ticker_counts.head(20).items()} if len(ticker_counts) > 0 else {}
+    top_posts_df = posts_df.nlargest(10, 'score')[['title', 'subreddit', 'score', 'num_comments']]
+    top_posts = json.loads(top_posts_df.to_json(orient='records'))
 
     subreddit_summary = {}
     for sub in subreddits:
         sub_posts = posts_df[posts_df['subreddit'] == sub]
         if len(sub_posts) > 0:
             subreddit_summary[sub] = {
-                'post_count': len(sub_posts),
-                'avg_score': round(sub_posts['score'].mean(), 1),
+                'post_count': int(len(sub_posts)),
+                'avg_score': round(float(sub_posts['score'].mean()), 1),
                 'top_titles': sub_posts.nlargest(3, 'score')['title'].tolist()
             }
 
@@ -322,8 +332,19 @@ if __name__ == "__main__":
     else:
         output_path = os.path.join(current_dir, "dashboard_data.json")
 
+    import numpy as np
+    class NumpyEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, (np.integer,)):
+                return int(obj)
+            if isinstance(obj, (np.floating,)):
+                return float(obj)
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            return super().default(obj)
+
     with open(output_path, 'w') as f:
-        json.dump(dashboard_data, f, indent=2)
+        json.dump(dashboard_data, f, indent=2, cls=NumpyEncoder)
     print(f"💾 Saved: {output_path}")
 
     print("\n" + "=" * 70)
