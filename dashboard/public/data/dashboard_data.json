@@ -1,0 +1,98 @@
+{
+  "scraped_at": "2026-02-13T04:00:00+00:00",
+  "subreddits": ["wallstreetbets", "stocks", "investing", "options", "StockMarket"],
+  "posts": [
+    {"subreddit": "wallstreetbets", "title": "NVDA to the moon - earnings next week", "body": "Loading up on $NVDA calls before earnings. AI spending is insane.", "score": 2450, "num_comments": 342, "created_utc": 1739404800, "author": "tendieking99", "permalink": "/r/wallstreetbets/comments/abc123/nvda_to_the_moon/", "tickers": ["NVDA"]},
+    {"subreddit": "wallstreetbets", "title": "$TSLA short squeeze incoming?", "body": "Short interest is at 20%. $TSLA could rip.", "score": 1890, "num_comments": 567, "created_utc": 1739401200, "author": "elonsimp", "permalink": "/r/wallstreetbets/comments/abc124/tsla_short_squeeze/", "tickers": ["TSLA"]},
+    {"subreddit": "wallstreetbets", "title": "AAPL is the safest play right now", "body": "With all this volatility $AAPL is a rock. Services revenue is growing.", "score": 1200, "num_comments": 189, "created_utc": 1739397600, "author": "valueguy", "permalink": "/r/wallstreetbets/comments/abc125/aapl_safe/", "tickers": ["AAPL"]},
+    {"subreddit": "stocks", "title": "AMD beating Intel in every segment", "body": "$AMD datacenter revenue up 120% YoY. $INTC is done.", "score": 980, "num_comments": 234, "created_utc": 1739394000, "author": "chipwatcher", "permalink": "/r/stocks/comments/def123/amd_beating/", "tickers": ["AMD", "INTC"]},
+    {"subreddit": "stocks", "title": "MSFT cloud growth is unstoppable", "body": "$MSFT Azure grew 30% this quarter. AI copilot revenue emerging.", "score": 870, "num_comments": 156, "created_utc": 1739390400, "author": "cloudking", "permalink": "/r/stocks/comments/def124/msft_cloud/", "tickers": ["MSFT"]},
+    {"subreddit": "stocks", "title": "Is META overvalued at these levels?", "body": "$META PE ratio is getting stretched. Reality Labs still burning cash.", "score": 756, "num_comments": 298, "created_utc": 1739386800, "author": "contrarian_view", "permalink": "/r/stocks/comments/def125/meta_overvalued/", "tickers": ["META"]},
+    {"subreddit": "investing", "title": "Long-term portfolio allocation for 2026", "body": "60% $VOO 20% $SCHD 10% $QQQM 10% bonds. Thoughts?", "score": 650, "num_comments": 178, "created_utc": 1739383200, "author": "bogleheadfan", "permalink": "/r/investing/comments/ghi123/portfolio_2026/", "tickers": ["VOO", "SCHD", "QQQM"]},
+    {"subreddit": "investing", "title": "Treasury yields dropping - what does it mean?", "body": "10-year at 3.8%. Rate cuts incoming. Good for $TLT.", "score": 540, "num_comments": 145, "created_utc": 1739379600, "author": "bondbro", "permalink": "/r/investing/comments/ghi124/treasury_yields/", "tickers": ["TLT"]},
+    {"subreddit": "options", "title": "SPY 0DTE plays for tomorrow", "body": "$SPY looking weak. Puts at 505 strike. $VIX creeping up.", "score": 1100, "num_comments": 456, "created_utc": 1739376000, "author": "optionsgambler", "permalink": "/r/options/comments/jkl123/spy_0dte/", "tickers": ["SPY", "VIX"]},
+    {"subreddit": "options", "title": "NVDA iron condor for earnings", "body": "$NVDA IV is insane. Selling 900/950/1000/1050 iron condor.", "score": 890, "num_comments": 123, "created_utc": 1739372400, "author": "thetaking", "permalink": "/r/options/comments/jkl124/nvda_ic/", "tickers": ["NVDA"]},
+    {"subreddit": "StockMarket", "title": "Market correction fears overblown", "body": "Every dip gets bought. $SPY at ATH. Earnings are solid across the board.", "score": 670, "num_comments": 234, "created_utc": 1739368800, "author": "bullmarket", "permalink": "/r/StockMarket/comments/mno123/correction_overblown/", "tickers": ["SPY"]},
+    {"subreddit": "StockMarket", "title": "GOOGL AI search is a game changer", "body": "$GOOGL Gemini integration driving search revenue. Undervalued vs peers.", "score": 520, "num_comments": 167, "created_utc": 1739365200, "author": "techwatcher", "permalink": "/r/StockMarket/comments/mno124/googl_ai/", "tickers": ["GOOGL"]},
+    {"subreddit": "wallstreetbets", "title": "PLTR is the next 10x", "body": "$PLTR government contracts piling up. AI platform is best in class.", "score": 3200, "num_comments": 678, "created_utc": 1739361600, "author": "palantard", "permalink": "/r/wallstreetbets/comments/abc126/pltr_10x/", "tickers": ["PLTR"]},
+    {"subreddit": "wallstreetbets", "title": "SOFI breaking out", "body": "$SOFI student loan payments resuming. Bank charter is printing money.", "score": 1450, "num_comments": 345, "created_utc": 1739358000, "author": "fintechbull", "permalink": "/r/wallstreetbets/comments/abc127/sofi_breakout/", "tickers": ["SOFI"]},
+    {"subreddit": "stocks", "title": "AMZN AWS still dominant", "body": "$AMZN AWS market share stable. Advertising segment growing fast.", "score": 730, "num_comments": 198, "created_utc": 1739354400, "author": "cloudcompare", "permalink": "/r/stocks/comments/def126/amzn_aws/", "tickers": ["AMZN"]},
+    {"subreddit": "investing", "title": "International diversification in 2026", "body": "$VXUS and $VEA looking attractive. US markets expensive by most metrics.", "score": 480, "num_comments": 134, "created_utc": 1739350800, "author": "globalinvestor", "permalink": "/r/investing/comments/ghi125/international/", "tickers": ["VXUS", "VEA"]},
+    {"subreddit": "options", "title": "TSLA straddle before delivery numbers", "body": "$TSLA delivery numbers next week. IV is low. Buying straddles.", "score": 670, "num_comments": 210, "created_utc": 1739347200, "author": "volatrader", "permalink": "/r/options/comments/jkl125/tsla_straddle/", "tickers": ["TSLA"]},
+    {"subreddit": "StockMarket", "title": "Small caps finally rotating", "body": "$IWM breaking out. Rate cuts favor small caps. $AVUV up 15% YTD.", "score": 410, "num_comments": 89, "created_utc": 1739343600, "author": "smallcapfan", "permalink": "/r/StockMarket/comments/mno125/small_caps/", "tickers": ["IWM", "AVUV"]},
+    {"subreddit": "wallstreetbets", "title": "COIN to $400", "body": "$COIN crypto regulation clarity. Bitcoin ETF inflows massive.", "score": 1780, "num_comments": 432, "created_utc": 1739340000, "author": "cryptodegen", "permalink": "/r/wallstreetbets/comments/abc128/coin_400/", "tickers": ["COIN"]},
+    {"subreddit": "stocks", "title": "LLY and NOVO - obesity drug race", "body": "$LLY Mounjaro sales crushing it. $NVO Wegovy supply improving.", "score": 920, "num_comments": 276, "created_utc": 1739336400, "author": "pharmawatcher", "permalink": "/r/stocks/comments/def127/lly_novo/", "tickers": ["LLY", "NVO"]}
+  ],
+  "comments": [
+    {"post_title": "PLTR is the next 10x", "subreddit": "wallstreetbets", "comment": "PLTR is overvalued. PE ratio is insane. But I still hold bags.", "score": 245, "author": "realist123", "tickers": ["PLTR"]},
+    {"post_title": "PLTR is the next 10x", "subreddit": "wallstreetbets", "comment": "$PLTR will hit $100 by EOY. Government AI spending is just starting.", "score": 189, "author": "bullish_on_ai", "tickers": ["PLTR"]},
+    {"post_title": "$TSLA short squeeze incoming?", "subreddit": "wallstreetbets", "comment": "No squeeze coming. Short interest has been higher before. $TSLA is overpriced.", "score": 156, "author": "shortking", "tickers": ["TSLA"]},
+    {"post_title": "NVDA to the moon - earnings next week", "subreddit": "wallstreetbets", "comment": "$NVDA $AMD whole AI supply chain is printing. I'm all in semis.", "score": 312, "author": "semibull", "tickers": ["NVDA", "AMD"]},
+    {"post_title": "SPY 0DTE plays for tomorrow", "subreddit": "options", "comment": "0DTE is gambling. At least buy 2 weeks out. $SPY puts are expensive.", "score": 98, "author": "thetagang", "tickers": ["SPY"]},
+    {"post_title": "AMD beating Intel in every segment", "subreddit": "stocks", "comment": "Intel still has fabs. $INTC foundry business could be massive long term.", "score": 67, "author": "contrarianChip", "tickers": ["INTC"]},
+    {"post_title": "Market correction fears overblown", "subreddit": "StockMarket", "comment": "Famous last words. Every bubble pops eventually.", "score": 134, "author": "permabear", "tickers": []},
+    {"post_title": "Is META overvalued at these levels?", "subreddit": "stocks", "comment": "$META is fairly valued. Instagram Reels monetization is just beginning.", "score": 87, "author": "socialmediabull", "tickers": ["META"]},
+    {"post_title": "Long-term portfolio allocation for 2026", "subreddit": "investing", "comment": "Skip $SCHD, it's a yield trap. Just go 100% $VOO and chill.", "score": 210, "author": "simplepath", "tickers": ["SCHD", "VOO"]},
+    {"post_title": "COIN to $400", "subreddit": "wallstreetbets", "comment": "$COIN moves with crypto. If BTC hits 100k, COIN goes parabolic.", "score": 178, "author": "cryptobull", "tickers": ["COIN"]}
+  ],
+  "ticker_mentions": {
+    "NVDA": 48, "TSLA": 42, "SPY": 38, "AAPL": 35, "AMD": 32,
+    "MSFT": 28, "META": 26, "PLTR": 24, "AMZN": 22, "GOOGL": 20,
+    "COIN": 18, "SOFI": 16, "LLY": 14, "VOO": 12, "INTC": 10,
+    "NVO": 8, "SCHD": 7, "TLT": 6, "IWM": 5, "QQQM": 4
+  },
+  "subreddit_tickers": {
+    "wallstreetbets": {"NVDA": 18, "TSLA": 15, "PLTR": 14, "COIN": 10, "SOFI": 9, "AAPL": 7, "SPY": 5},
+    "stocks": {"AMD": 12, "MSFT": 11, "META": 10, "AMZN": 9, "LLY": 8, "INTC": 7, "NVO": 5, "AAPL": 4},
+    "investing": {"VOO": 8, "SCHD": 6, "QQQM": 4, "TLT": 4, "VXUS": 3, "VEA": 3, "AAPL": 2},
+    "options": {"SPY": 15, "NVDA": 12, "TSLA": 10, "VIX": 8, "AAPL": 5, "AMD": 4},
+    "StockMarket": {"SPY": 10, "GOOGL": 8, "IWM": 5, "AVUV": 3, "NVDA": 4, "AAPL": 3}
+  },
+  "subreddit_stats": {
+    "wallstreetbets": {"post_count": 100, "avg_score": 1534.2, "avg_comments": 312.5, "total_score": 153420},
+    "stocks": {"post_count": 95, "avg_score": 678.4, "avg_comments": 187.3, "total_score": 64448},
+    "investing": {"post_count": 88, "avg_score": 423.1, "avg_comments": 134.8, "total_score": 37233},
+    "options": {"post_count": 92, "avg_score": 756.8, "avg_comments": 245.6, "total_score": 69626},
+    "StockMarket": {"post_count": 85, "avg_score": 512.3, "avg_comments": 156.2, "total_score": 43546}
+  },
+  "ai_analysis": {
+    "sentiment": {
+      "overall": "bullish",
+      "confidence": 72,
+      "reasoning": "Strong momentum in AI/semiconductor narratives with broad participation across subreddits. While some caution exists around valuations, the dominant sentiment favors continued upside driven by AI spending and rate cut expectations."
+    },
+    "themes": [
+      "AI infrastructure spending driving semiconductor demand (NVDA, AMD)",
+      "Rate cut expectations boosting growth and small-cap stocks",
+      "Mega-cap tech earnings resilience (MSFT, AAPL, GOOGL, META)",
+      "Crypto/fintech optimism on regulatory clarity (COIN, SOFI)",
+      "Obesity drug market competition between LLY and NVO",
+      "Portfolio rotation from US large-cap to international and small-cap"
+    ],
+    "tickers_to_watch": [
+      {"ticker": "NVDA", "sentiment": "bullish", "reason": "Earnings catalyst next week with AI spending tailwinds; highest mention volume across all subreddits."},
+      {"ticker": "PLTR", "sentiment": "bullish", "reason": "Government AI contract momentum and WSB retail enthusiasm creating strong upward pressure."},
+      {"ticker": "TSLA", "sentiment": "neutral", "reason": "Delivery numbers pending with divided opinion on valuation; high short interest adds volatility risk."}
+    ],
+    "risk_factors": [
+      "Elevated valuations in AI/semiconductor sector vulnerable to earnings misses",
+      "0DTE options activity creating potential for sharp intraday reversals",
+      "Concentration risk with mega-cap tech dominating market returns",
+      "Geopolitical risks to semiconductor supply chains not being priced in"
+    ],
+    "contrarian_views": [
+      "Some investors argue Intel's foundry business makes INTC a deep value play despite current weakness",
+      "Permabears warn that every dip being bought signals complacency before a correction",
+      "International diversification advocates suggest US markets are overvalued relative to ex-US equities"
+    ],
+    "sector_breakdown": {
+      "Technology": 145,
+      "Semiconductors": 80,
+      "Financial Services": 34,
+      "Healthcare": 22,
+      "ETFs/Index": 28,
+      "Crypto/Fintech": 18,
+      "Consumer": 12
+    }
+  }
+}
