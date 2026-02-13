@@ -36,3 +36,6 @@ jobs:
           git add dashboard/public/data/dashboard_data.json
           git diff --staged --quiet || git commit -m "chore: update finance dashboard data [skip ci]"
           git push
+
+      - name: Trigger Vercel rebuild
+        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
