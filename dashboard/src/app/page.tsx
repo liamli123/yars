@@ -1,14 +1,13 @@
 import { DashboardData } from "@/lib/types";
 import {
   getTickerChartData,
-  getSubredditRadarData,
   getEngagementData,
   getTimelineData,
   getSubredditTickerData,
 } from "@/lib/data";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import TickerBarChart from "@/components/dashboard/TickerBarChart";
-import SubredditRadar from "@/components/dashboard/SubredditRadar";
+import SubredditActivity from "@/components/dashboard/SubredditRadar";
 import SentimentDonut from "@/components/dashboard/SentimentDonut";
 import EngagementScatter from "@/components/dashboard/EngagementScatter";
 import TimelineArea from "@/components/dashboard/TimelineArea";
@@ -42,7 +41,7 @@ export default function Home() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <TickerBarChart data={getTickerChartData(data)} />
-        <SubredditRadar data={getSubredditRadarData(data)} />
+        <SubredditActivity stats={data.subreddit_stats} />
         <SentimentDonut sectorBreakdown={data.ai_analysis.sector_breakdown} />
         <EngagementScatter
           data={getEngagementData(data)}

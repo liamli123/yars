@@ -140,11 +140,11 @@ def get_ai_analysis(posts_df, ticker_counts, comments_df, subreddits):
                 'top_titles': sub_posts.nlargest(3, 'score')['title'].tolist()
             }
 
-    prompt = f"""Analyze this Reddit finance data snapshot and provide investment insights.
+    prompt = f"""Analyze this Reddit finance data snapshot and provide investment insights. Write in plain, conversational English that a regular investor can understand — no jargon without explanation.
 
 Top ticker mentions (ticker: count): {json.dumps(top_tickers)}
 
-Top posts by score:
+Top posts by score (upvotes):
 {json.dumps(top_posts, indent=2)}
 
 Subreddit breakdown:
@@ -154,11 +154,17 @@ Total posts scraped: {len(posts_df)}
 Total comments scraped: {len(comments_df)}
 
 Provide your analysis as JSON with these exact keys:
-- "sentiment": object with "overall" (one of "bullish", "bearish", "neutral"), "confidence" (0-100), and "reasoning" (1-2 sentences)
-- "themes": array of 4-6 strings describing key narratives/themes
-- "tickers_to_watch": array of 3 objects, each with "ticker" (string), "sentiment" ("bullish"/"bearish"/"neutral"), and "reason" (1 sentence)
-- "risk_factors": array of 3-4 strings describing risks mentioned
-- "contrarian_views": array of 2-3 strings describing notable minority opinions
+
+- "sentiment": object with "overall" (one of "bullish", "bearish", "neutral"), "confidence" (0-100), and "reasoning" (2-3 sentences in plain English explaining why the market mood leans this way)
+
+- "themes": array of 4-6 objects, each with "title" (short label, 3-6 words) and "explanation" (2-3 sentences in plain English describing what people are talking about and why it matters for investors)
+
+- "tickers_to_watch": array of 5 objects, each with "ticker" (string), "sentiment" ("bullish"/"bearish"/"neutral"), and "reason" (2-3 sentences in plain English explaining why this stock is worth watching right now, what the Reddit community thinks, and what could move the price)
+
+- "risk_factors": array of 3-4 objects, each with "title" (short label) and "explanation" (2-3 sentences in plain English explaining the risk and how it could impact regular investors)
+
+- "contrarian_views": array of 2-3 objects, each with "title" (short label) and "explanation" (2-3 sentences in plain English describing what the minority thinks and why their argument has some merit)
+
 - "sector_breakdown": object mapping sector names to mention counts (e.g. "Technology": 45)
 
 Return ONLY valid JSON, no markdown."""

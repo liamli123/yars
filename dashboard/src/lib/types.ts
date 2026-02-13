@@ -32,16 +32,31 @@ export interface TickerToWatch {
   reason: string;
 }
 
+export interface Theme {
+  title: string;
+  explanation: string;
+}
+
+export interface RiskFactor {
+  title: string;
+  explanation: string;
+}
+
+export interface ContrarianView {
+  title: string;
+  explanation: string;
+}
+
 export interface AiAnalysis {
   sentiment: {
     overall: "bullish" | "bearish" | "neutral";
     confidence: number;
     reasoning: string;
   };
-  themes: string[];
+  themes: (Theme | string)[];
   tickers_to_watch: TickerToWatch[];
-  risk_factors: string[];
-  contrarian_views: string[];
+  risk_factors: (RiskFactor | string)[];
+  contrarian_views: (ContrarianView | string)[];
   sector_breakdown: Record<string, number>;
 }
 

@@ -1,63 +1,42 @@
 "use client";
 
 import {
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
   Tooltip,
+  ResponsiveContainer,
   Legend,
 } from "recharts";
+import { SubredditStats } from "@/lib/types";
+import { SUBREDDIT_COLORS } from "@/lib/data";
 
-interface DataPoint {
-  subreddit: string;
-  score: number;
-  comments: number;
-  activity: number;
+interface Props {
+  stats: Record<string, SubredditStats>;
 }
 
-export default function SubredditRadar({ data }: { data: DataPoint[] }) {
+export default function SubredditActivity({ stats }: Props) {
+  const data = Object.entries(stats).map(([sub, s]) => ({
+    name: `r/${sub}`,
+    "Avg Upvotes": Math.round(s.avg_score),
+    "Avg Comments": Math.round(s.avg_comments),
+    "Post Count": s.post_count,
+    fill: SUBREDDIT_COLORS[sub] || "#6b7280",
+  }));
+
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
       <h2 className="text-lg font-semibold text-white mb-1">
-        Subreddit Comparison
+        Subreddit Activity
       </h2>
       <p className="text-xs text-gray-500 mb-4">
-        Normalized scores, comment engagement, and post activity
+        Average upvotes, comments, and post count per community
       </p>
       <ResponsiveContainer width="100%" height={400}>
-        <RadarChart data={data}>
-          <PolarGrid stroke="#374151" />
-          <PolarAngleAxis dataKey="subreddit" stroke="#9ca3af" fontSize={11} />
-          <PolarRadiusAxis
-            angle={90}
-            domain={[0, 100]}
-            stroke="#4b5563"
-            fontSize={10}
-          />
-          <Radar
-            name="Avg Score"
-            dataKey="score"
-            stroke="#8b5cf6"
-            fill="#8b5cf6"
-            fillOpacity={0.2}
-          />
-          <Radar
-            name="Avg Comments"
-            dataKey="comments"
-            stroke="#3b82f6"
-            fill="#3b82f6"
-            fillOpacity={0.2}
-          />
-          <Radar
-            name="Post Activity"
-            dataKey="activity"
-            stroke="#10b981"
-            fill="#10b981"
-            fillOpacity={0.2}
-          />
+        <BarChart data={data} margin={{ left: 10, right: 20, bottom: 10 }}>
+          <XAxis dataKey="name" stroke="#9ca3af" fontSize={11} />
+          <YAxis stroke="#4b5563" fontSize={12} />
           <Tooltip
             contentStyle={{
               backgroundColor: "#1f2937",
@@ -67,10 +46,23 @@ export default function SubredditRadar({ data }: { data: DataPoint[] }) {
               fontSize: "13px",
             }}
           />
-          <Legend
-            wrapperStyle={{ fontSize: "12px", color: "#9ca3af" }}
+          <Legend wrapperStyle={{ fontSize: "12px" }} />
+          <Bar
+            dataKey="Avg Upvotes"
+            fill="#8b5cf6"
+            radius={[4, 4, 0, 0]}
           />
-        </RadarChart>
+          <Bar
+            dataKey="Avg Comments"
+            fill="#3b82f6"
+            radius={[4, 4, 0, 0]}
+          />
+          <Bar
+            dataKey="Post Count"
+            fill="#10b981"
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );
