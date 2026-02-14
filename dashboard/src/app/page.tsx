@@ -33,7 +33,7 @@ export default function Home() {
       />
 
       {/* AI Insights */}
-      <AiInsightsPanel analysis={data.ai_analysis} />
+      <AiInsightsPanel analysis={data.ai_analysis} tickerDetails={data.ticker_details || {}} />
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">

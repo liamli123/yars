@@ -1,6 +1,9 @@
 "use client";
 
-import { AiAnalysis } from "@/lib/types";
+import { useState } from "react";
+import { AiAnalysis, TickerDetail } from "@/lib/types";
+import TickerSummary from "./TickerSummary";
+import TickerHeatmap from "./TickerHeatmap";
 
 const sentimentConfig = {
   bullish: { color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
@@ -32,9 +35,25 @@ function getViewExplanation(view: string | { title: string; explanation: string 
   return typeof view === "string" ? null : view.explanation;
 }
 
-export default function AiInsightsPanel({ analysis }: { analysis: AiAnalysis }) {
+interface Props {
+  analysis: AiAnalysis;
+  tickerDetails?: Record<string, TickerDetail>;
+}
+
+export default function AiInsightsPanel({ analysis, tickerDetails = {} }: Props) {
+  const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   const s = analysis.sentiment;
   const cfg = sentimentConfig[s.overall] || sentimentConfig.neutral;
+
+  function handleTickerClick(ticker: string) {
+    const key = `$${ticker}`;
+    setSelectedTicker((prev) => (prev === key ? null : key));
+  }
+
+  const selectedSymbol = selectedTicker?.startsWith("$")
+    ? selectedTicker.slice(1)
+    : selectedTicker;
+  const selectedDetail = selectedSymbol ? tickerDetails[selectedSymbol] || null : null;
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
@@ -67,19 +86,48 @@ export default function AiInsightsPanel({ analysis }: { analysis: AiAnalysis }) 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
           {analysis.tickers_to_watch.map((t, i) => {
             const tcfg = sentimentConfig[t.sentiment] || sentimentConfig.neutral;
+            const isSelected = selectedTicker === `$${t.ticker}`;
+            const hasDetail = !!tickerDetails[t.ticker];
             return (
-              <div key={i} className="bg-gray-800/60 border border-gray-700/50 rounded-lg p-4">
+              <div
+                key={i}
+                className={`bg-gray-800/60 border rounded-lg p-4 transition-colors ${
+                  isSelected
+                    ? "border-violet-500/50 bg-violet-500/5"
+                    : "border-gray-700/50"
+                }`}
+              >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg font-bold text-white">${t.ticker}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tcfg.bg} ${tcfg.color}`}>
                     {t.sentiment}
                   </span>
                 </div>
-                <p className="text-sm text-gray-400 leading-relaxed">{t.reason}</p>
+                <p className="text-sm text-gray-400 leading-relaxed mb-3">{t.reason}</p>
+                {hasDetail && (
+                  <button
+                    onClick={() => handleTickerClick(t.ticker)}
+                    className={`w-full text-xs font-medium px-3 py-1.5 rounded-md transition-colors ${
+                      isSelected
+                        ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                        : "bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-gray-300 border border-gray-600/30"
+                    }`}
+                  >
+                    {isSelected ? "Hide Analysis" : "View Analysis"}
+                  </button>
+                )}
               </div>
             );
           })}
         </div>
+
+        {/* Ticker detail panels */}
+        {selectedTicker && selectedDetail && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <TickerSummary ticker={selectedTicker} detail={selectedDetail} />
+            <TickerHeatmap ticker={selectedTicker} factors={selectedDetail.factors} />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

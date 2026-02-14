@@ -34,7 +34,7 @@ export default function TickerHeatmap({ ticker, factors }: Props) {
       <p className="text-xs text-gray-500 mb-4">
         Top positive and negative factors being discussed
       </p>
-      <ResponsiveContainer width="100%" height={Math.max(500, data.length * 28)}>
+      <ResponsiveContainer width="100%" height={Math.max(600, data.length * 32)}>
         <BarChart data={data} layout="vertical" margin={{ left: 10, right: 20 }}>
           <XAxis
             type="number"
@@ -47,9 +47,9 @@ export default function TickerHeatmap({ ticker, factors }: Props) {
             type="category"
             dataKey="factor"
             stroke="#9ca3af"
-            fontSize={11}
-            width={180}
-            tick={{ fill: "#d1d5db" }}
+            fontSize={13}
+            width={250}
+            tick={{ fill: "#e5e7eb" }}
           />
           <Tooltip
             contentStyle={{
