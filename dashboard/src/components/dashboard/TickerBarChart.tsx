@@ -15,7 +15,13 @@ interface DataPoint {
   mentions: number;
 }
 
-export default function TickerBarChart({ data }: { data: DataPoint[] }) {
+interface Props {
+  data: DataPoint[];
+  selectedTicker: string | null;
+  onTickerClick: (ticker: string) => void;
+}
+
+export default function TickerBarChart({ data, selectedTicker, onTickerClick }: Props) {
   const maxMentions = Math.max(...data.map((d) => d.mentions));
 
   return (
@@ -24,7 +30,7 @@ export default function TickerBarChart({ data }: { data: DataPoint[] }) {
         Top Ticker Mentions
       </h2>
       <p className="text-xs text-gray-500 mb-4">
-        Most discussed stocks across all subreddits
+        Click a ticker to see detailed analysis
       </p>
       <ResponsiveContainer width="100%" height={400}>
         <BarChart data={data} layout="vertical" margin={{ left: 10, right: 20 }}>
@@ -45,13 +51,28 @@ export default function TickerBarChart({ data }: { data: DataPoint[] }) {
               fontSize: "13px",
             }}
           />
-          <Bar dataKey="mentions" radius={[0, 6, 6, 0]}>
-            {data.map((entry, i) => (
-              <Cell
-                key={i}
-                fill={`hsl(${150 - (entry.mentions / maxMentions) * 100}, 80%, ${45 + (entry.mentions / maxMentions) * 15}%)`}
-              />
-            ))}
+          <Bar
+            dataKey="mentions"
+            radius={[0, 6, 6, 0]}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onClick={(barData: any) => onTickerClick(barData.ticker)}
+            cursor="pointer"
+          >
+            {data.map((entry, i) => {
+              const isSelected = entry.ticker === selectedTicker;
+              return (
+                <Cell
+                  key={i}
+                  fill={
+                    isSelected
+                      ? "#a78bfa"
+                      : `hsl(${150 - (entry.mentions / maxMentions) * 100}, 80%, ${45 + (entry.mentions / maxMentions) * 15}%)`
+                  }
+                  stroke={isSelected ? "#8b5cf6" : "none"}
+                  strokeWidth={isSelected ? 2 : 0}
+                />
+              );
+            })}
           </Bar>
         </BarChart>
       </ResponsiveContainer>

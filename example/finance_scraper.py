@@ -191,7 +191,141 @@ Return ONLY valid JSON, no markdown."""
         print(f"   ✗ AI analysis failed: {e}")
         return None
 
-def build_dashboard_data(posts_df, comments_df, ticker_counts, subreddits, ai_analysis):
+def get_ticker_details(posts_df, comments_df, ticker_counts):
+    """Use DeepSeek API to generate per-ticker summaries and sentiment factors"""
+    try:
+        from openai import OpenAI
+    except ImportError:
+        print("   ⚠ openai package not installed")
+        return {}
+
+    top_tickers = ticker_counts.head(10).index.tolist() if len(ticker_counts) > 0 else []
+    if not top_tickers:
+        print("   ⚠ No tickers found, skipping ticker details")
+        return {}
+
+    print(f"\n🔍 Generating details for {len(top_tickers)} tickers...")
+
+    # Build per-ticker context from posts and comments
+    ticker_context = {}
+    for ticker in top_tickers:
+        relevant_posts = posts_df[
+            posts_df['tickers'].apply(lambda t: ticker in t if isinstance(t, list) else False) |
+            posts_df['title'].str.contains(rf'\b{ticker}\b', case=False, na=False)
+        ]
+        relevant_comments = pd.DataFrame()
+        if len(comments_df) > 0:
+            relevant_comments = comments_df[
+                comments_df['tickers'].apply(lambda t: ticker in t if isinstance(t, list) else False) |
+                comments_df['comment'].str.contains(rf'\b{ticker}\b', case=False, na=False)
+            ]
+
+        post_samples = []
+        for _, row in relevant_posts.head(8).iterrows():
+            post_samples.append({
+                'title': row['title'],
+                'subreddit': row['subreddit'],
+                'score': int(row['score']),
+                'num_comments': int(row['num_comments']),
+            })
+
+        comment_samples = []
+        if len(relevant_comments) > 0:
+            for _, row in relevant_comments.head(8).iterrows():
+                comment_samples.append({
+                    'comment': str(row.get('comment', ''))[:300],
+                    'subreddit': row.get('subreddit', ''),
+                    'score': int(row['score']),
+                })
+
+        ticker_context[ticker] = {
+            'mention_count': int(ticker_counts.get(ticker, 0)),
+            'total_posts': len(relevant_posts),
+            'total_comments': len(relevant_comments),
+            'posts': post_samples,
+            'comments': comment_samples,
+        }
+
+    # Clear proxy env vars
+    env_backup = {}
+    for key in ('HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'http_proxy', 'https_proxy', 'all_proxy'):
+        if key in os.environ:
+            env_backup[key] = os.environ.pop(key)
+    try:
+        client = OpenAI(
+            api_key=DEEPSEEK_API_KEY,
+            base_url=DEEPSEEK_BASE_URL,
+        )
+    finally:
+        os.environ.update(env_backup)
+
+    # Process tickers in batches of 3 to avoid token limit issues
+    all_details = {}
+    batch_size = 3
+    for i in range(0, len(top_tickers), batch_size):
+        batch = top_tickers[i:i + batch_size]
+        batch_context = {t: ticker_context[t] for t in batch}
+        print(f"   Processing batch: {', '.join(batch)}...")
+
+        prompt = f"""For each of the following stock tickers, analyze the Reddit community discussion and provide:
+1. A ~500-word summary in plain, conversational English about what people are saying, why the stock is getting attention, and what investors should know
+2. Exactly 10 positive factors and 10 negative factors being discussed
+
+Here is the Reddit data for each ticker:
+{json.dumps(batch_context, indent=2)}
+
+Return JSON with this exact structure (one entry per ticker):
+{{
+  "TICKER_SYMBOL": {{
+    "summary": "~500 word plain English summary of community discussion...",
+    "factors": [
+      {{"factor": "Short description of positive factor", "type": "positive", "intensity": 8}},
+      {{"factor": "Short description of negative factor", "type": "negative", "intensity": -7}}
+    ]
+  }}
+}}
+
+Rules:
+- intensity ranges from 1 to 10 for positive factors, -1 to -10 for negative factors
+- Each ticker MUST have exactly 10 positive factors and 10 negative factors (20 total)
+- For tickers with few Reddit mentions, supplement with general market context about that company
+- Write summaries in plain English a regular investor can understand
+- Factor descriptions should be concise (5-15 words each)
+- Return ONLY valid JSON, no markdown"""
+
+        try:
+            response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=6000,
+            )
+
+            raw = response.choices[0].message.content.strip()
+            if raw.startswith("```"):
+                raw = raw.split("\n", 1)[1]
+                raw = raw.rsplit("```", 1)[0]
+
+            batch_details = json.loads(raw)
+
+            # Attach mention_count from actual data
+            for ticker in batch:
+                if ticker in batch_details:
+                    batch_details[ticker]["mention_count"] = int(ticker_counts.get(ticker, 0))
+
+            all_details.update(batch_details)
+            print(f"   ✓ Got details for: {', '.join(batch_details.keys())}")
+
+        except Exception as e:
+            print(f"   ✗ Batch failed ({', '.join(batch)}): {e}")
+
+        time.sleep(1)
+
+    print(f"   ✓ Ticker details generated for {len(all_details)} tickers total")
+    return all_details
+
+
+def build_dashboard_data(posts_df, comments_df, ticker_counts, subreddits, ai_analysis, ticker_details=None):
     """Build the consolidated JSON for the dashboard"""
     # Per-subreddit stats
     subreddit_stats = {}
@@ -269,6 +403,7 @@ def build_dashboard_data(posts_df, comments_df, ticker_counts, subreddits, ai_an
         "subreddit_tickers": subreddit_tickers,
         "subreddit_stats": subreddit_stats,
         "ai_analysis": ai_analysis,
+        "ticker_details": ticker_details or {},
     }
 
 
@@ -327,9 +462,13 @@ if __name__ == "__main__":
     print("\n[STEP 3] Running AI analysis...")
     ai_analysis = get_ai_analysis(posts_df, ticker_counts, comments_df, subreddits)
 
+    # Per-ticker details
+    print("\n[STEP 3b] Generating per-ticker details...")
+    ticker_details = get_ticker_details(posts_df, comments_df, ticker_counts)
+
     # Build and save dashboard JSON
     print("\n[STEP 4] Building dashboard data...")
-    dashboard_data = build_dashboard_data(posts_df, comments_df, ticker_counts, subreddits, ai_analysis)
+    dashboard_data = build_dashboard_data(posts_df, comments_df, ticker_counts, subreddits, ai_analysis, ticker_details)
 
     # Save to dashboard/public/data/ if it exists, otherwise save locally
     dashboard_dir = os.path.join(project_root, "dashboard", "public", "data")

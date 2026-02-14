@@ -47,6 +47,18 @@ export interface ContrarianView {
   explanation: string;
 }
 
+export interface TickerFactor {
+  factor: string;
+  type: "positive" | "negative";
+  intensity: number;
+}
+
+export interface TickerDetail {
+  summary: string;
+  mention_count: number;
+  factors: TickerFactor[];
+}
+
 export interface AiAnalysis {
   sentiment: {
     overall: "bullish" | "bearish" | "neutral";
@@ -69,4 +81,5 @@ export interface DashboardData {
   subreddit_tickers: Record<string, Record<string, number>>;
   subreddit_stats: Record<string, SubredditStats>;
   ai_analysis: AiAnalysis;
+  ticker_details: Record<string, TickerDetail>;
 }
