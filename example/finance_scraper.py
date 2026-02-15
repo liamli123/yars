@@ -205,8 +205,7 @@ def get_ticker_details(posts_df, comments_df, ticker_counts, ai_analysis=None):
     if ai_analysis and 'tickers_to_watch' in ai_analysis:
         for t in ai_analysis['tickers_to_watch']:
             ticker = t.get('ticker', '')
-            # Skip compound tickers like "V/MA"
-            if ticker and '/' not in ticker and ticker not in top_tickers:
+            if ticker and ticker not in top_tickers:
                 top_tickers.append(ticker)
 
     if not top_tickers:

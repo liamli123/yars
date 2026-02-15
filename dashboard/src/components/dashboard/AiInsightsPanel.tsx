@@ -45,6 +45,17 @@ export default function AiInsightsPanel({ analysis, tickerDetails = {} }: Props)
   const s = analysis.sentiment;
   const cfg = sentimentConfig[s.overall] || sentimentConfig.neutral;
 
+  function findDetail(ticker: string): { symbol: string; detail: TickerDetail } | null {
+    // Direct match
+    if (tickerDetails[ticker]) return { symbol: ticker, detail: tickerDetails[ticker] };
+    // For compound tickers like "V/MA", check the first part
+    if (ticker.includes("/")) {
+      const first = ticker.split("/")[0];
+      if (tickerDetails[first]) return { symbol: first, detail: tickerDetails[first] };
+    }
+    return null;
+  }
+
   function handleTickerClick(ticker: string) {
     const key = `$${ticker}`;
     setSelectedTicker((prev) => (prev === key ? null : key));
@@ -53,7 +64,8 @@ export default function AiInsightsPanel({ analysis, tickerDetails = {} }: Props)
   const selectedSymbol = selectedTicker?.startsWith("$")
     ? selectedTicker.slice(1)
     : selectedTicker;
-  const selectedDetail = selectedSymbol ? tickerDetails[selectedSymbol] || null : null;
+  const found = selectedSymbol ? findDetail(selectedSymbol) : null;
+  const selectedDetail = found?.detail || null;
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
@@ -87,7 +99,7 @@ export default function AiInsightsPanel({ analysis, tickerDetails = {} }: Props)
           {analysis.tickers_to_watch.map((t, i) => {
             const tcfg = sentimentConfig[t.sentiment] || sentimentConfig.neutral;
             const isSelected = selectedTicker === `$${t.ticker}`;
-            const hasDetail = !!tickerDetails[t.ticker];
+            const hasDetail = !!findDetail(t.ticker);
             return (
               <div
                 key={i}
