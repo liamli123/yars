@@ -18,16 +18,18 @@ interface Props {
 
 export default function SubredditTickerChart({ data, subreddits }: Props) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mt-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 mt-6">
       <h2 className="text-lg font-semibold text-white mb-1">
         Ticker Mentions by Subreddit
       </h2>
       <p className="text-xs text-gray-500 mb-4">
         Where each ticker is being discussed most
       </p>
-      <ResponsiveContainer width="100%" height={400}>
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="min-w-[400px] px-4 sm:px-0">
+      <ResponsiveContainer width="100%" height={350}>
         <BarChart data={data} margin={{ left: 10, right: 20, bottom: 10 }}>
-          <XAxis dataKey="ticker" stroke="#9ca3af" fontSize={12} />
+          <XAxis dataKey="ticker" stroke="#9ca3af" fontSize={11} />
           <YAxis stroke="#4b5563" fontSize={12} />
           <Tooltip
             contentStyle={{
@@ -51,6 +53,8 @@ export default function SubredditTickerChart({ data, subreddits }: Props) {
           ))}
         </BarChart>
       </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }

@@ -25,14 +25,14 @@ export default function TickerBarChart({ data, selectedTicker, onTickerClick }: 
   const maxMentions = Math.max(...data.map((d) => d.mentions));
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
       <h2 className="text-lg font-semibold text-white mb-1">
         Top Ticker Mentions
       </h2>
       <p className="text-xs text-gray-500 mb-4">
         Click a ticker to see detailed analysis
       </p>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={350}>
         <BarChart data={data} layout="vertical" margin={{ left: 10, right: 20 }}>
           <XAxis type="number" stroke="#4b5563" fontSize={12} />
           <YAxis

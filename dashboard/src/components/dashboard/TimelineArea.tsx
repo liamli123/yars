@@ -17,14 +17,16 @@ interface DataPoint {
 
 export default function TimelineArea({ data }: { data: DataPoint[] }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
       <h2 className="text-lg font-semibold text-white mb-1">
         Post Activity Timeline
       </h2>
       <p className="text-xs text-gray-500 mb-4">
         Post volume and average score over time
       </p>
-      <ResponsiveContainer width="100%" height={400}>
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="min-w-[500px] px-4 sm:px-0">
+      <ResponsiveContainer width="100%" height={350}>
         <AreaChart data={data} margin={{ left: 10, right: 20 }}>
           <defs>
             <linearGradient id="gradPosts" x1="0" y1="0" x2="0" y2="1">
@@ -68,6 +70,8 @@ export default function TimelineArea({ data }: { data: DataPoint[] }) {
           />
         </AreaChart>
       </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }

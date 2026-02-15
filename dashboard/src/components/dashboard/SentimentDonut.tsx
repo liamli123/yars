@@ -31,15 +31,15 @@ export default function SentimentDonut({ sectorBreakdown }: Props) {
       <p className="text-xs text-gray-500 mb-4">
         Mention share by sector across all discussions
       </p>
-      <div className="flex items-center gap-4">
-        <ResponsiveContainer width="55%" height={300}>
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        <ResponsiveContainer width="100%" height={250} className="sm:!w-[55%]">
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={110}
+              innerRadius={50}
+              outerRadius={95}
               paddingAngle={3}
               dataKey="value"
               stroke="none"
@@ -64,7 +64,7 @@ export default function SentimentDonut({ sectorBreakdown }: Props) {
             />
           </PieChart>
         </ResponsiveContainer>
-        <div className="flex-1 space-y-2">
+        <div className="w-full sm:flex-1 space-y-2">
           {data.map((d, i) => (
             <div key={d.name} className="flex items-center gap-2 text-sm">
               <div

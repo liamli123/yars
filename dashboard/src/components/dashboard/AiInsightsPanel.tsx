@@ -68,7 +68,7 @@ export default function AiInsightsPanel({ analysis, tickerDetails = {} }: Props)
   const selectedDetail = found?.detail || null;
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
       <div className="flex items-center gap-3 mb-6">
         <h2 className="text-lg font-semibold text-white">AI Market Analysis</h2>
         <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">
@@ -77,7 +77,7 @@ export default function AiInsightsPanel({ analysis, tickerDetails = {} }: Props)
       </div>
 
       {/* Sentiment Badge */}
-      <div className={`inline-flex items-center gap-4 px-5 py-4 rounded-lg border ${cfg.bg} ${cfg.border} mb-8`}>
+      <div className={`inline-flex flex-wrap items-center gap-4 px-4 sm:px-5 py-4 rounded-lg border ${cfg.bg} ${cfg.border} mb-8`}>
         <span className={`text-2xl font-bold uppercase tracking-wider ${cfg.color}`}>
           {s.overall}
         </span>
