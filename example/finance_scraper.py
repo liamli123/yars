@@ -191,7 +191,7 @@ Return ONLY valid JSON, no markdown."""
         print(f"   ✗ AI analysis failed: {e}")
         return None
 
-def get_ticker_details(posts_df, comments_df, ticker_counts):
+def get_ticker_details(posts_df, comments_df, ticker_counts, ai_analysis=None):
     """Use DeepSeek API to generate per-ticker summaries and sentiment factors"""
     try:
         from openai import OpenAI
@@ -200,6 +200,15 @@ def get_ticker_details(posts_df, comments_df, ticker_counts):
         return {}
 
     top_tickers = ticker_counts.head(10).index.tolist() if len(ticker_counts) > 0 else []
+
+    # Also include tickers_to_watch from AI analysis so they get details too
+    if ai_analysis and 'tickers_to_watch' in ai_analysis:
+        for t in ai_analysis['tickers_to_watch']:
+            ticker = t.get('ticker', '')
+            # Skip compound tickers like "V/MA"
+            if ticker and '/' not in ticker and ticker not in top_tickers:
+                top_tickers.append(ticker)
+
     if not top_tickers:
         print("   ⚠ No tickers found, skipping ticker details")
         return {}
@@ -259,9 +268,9 @@ def get_ticker_details(posts_df, comments_df, ticker_counts):
     finally:
         os.environ.update(env_backup)
 
-    # Process tickers in batches of 3 to avoid token limit issues
+    # Process tickers in batches of 2 to avoid token limit issues
     all_details = {}
-    batch_size = 3
+    batch_size = 2
     for i in range(0, len(top_tickers), batch_size):
         batch = top_tickers[i:i + batch_size]
         batch_context = {t: ticker_context[t] for t in batch}
@@ -464,7 +473,7 @@ if __name__ == "__main__":
 
     # Per-ticker details
     print("\n[STEP 3b] Generating per-ticker details...")
-    ticker_details = get_ticker_details(posts_df, comments_df, ticker_counts)
+    ticker_details = get_ticker_details(posts_df, comments_df, ticker_counts, ai_analysis)
 
     # Build and save dashboard JSON
     print("\n[STEP 4] Building dashboard data...")
