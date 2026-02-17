@@ -18,13 +18,45 @@ DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-b2a06327ea434feb94b361
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 
 def extract_tickers(text):
-    """Extract stock tickers like $TSLA, $AAPL"""
+    """Extract stock tickers like $TSLA, AAPL, or well-known company names"""
     if not text:
         return []
-    tickers = re.findall(r'\$([A-Z]{1,5})\b', str(text))
+    text_str = str(text)
+
+    # Match $TICKER format
+    dollar_tickers = re.findall(r'\$([A-Z]{1,5})\b', text_str)
+
+    # Match standalone uppercase tickers (2-5 chars, surrounded by spaces/punctuation)
+    # Only match known popular tickers to avoid false positives
+    known_tickers = {
+        'AAPL', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'META', 'TSLA', 'NVDA', 'AMD',
+        'NFLX', 'HOOD', 'SNAP', 'BABA', 'NIO', 'PLTR', 'SOFI', 'RIVN', 'LCID',
+        'GME', 'AMC', 'BB', 'NOK', 'WISH', 'CLOV', 'SPY', 'QQQ', 'IWM', 'DIA',
+        'INTC', 'MU', 'QCOM', 'CRM', 'ORCL', 'UBER', 'LYFT', 'COIN', 'SQ',
+        'PYPL', 'V', 'MA', 'JPM', 'BAC', 'WFC', 'GS', 'MS', 'C', 'SCHW',
+        'F', 'GM', 'TM', 'RIVN', 'DIS', 'CMCSA', 'T', 'VZ', 'TMUS',
+        'JNJ', 'PFE', 'MRNA', 'UNH', 'LLY', 'ABBV', 'BMY', 'MRK',
+        'WMT', 'COST', 'TGT', 'HD', 'LOW', 'SBUX', 'MCD', 'NKE',
+        'XOM', 'CVX', 'COP', 'BP', 'SHEL', 'BA', 'LMT', 'RTX', 'GE',
+        'HIMS', 'CVNA', 'SPOT', 'ROKU', 'RBLX', 'ABNB', 'DKNG',
+        'XLE', 'XLF', 'XLK', 'ARKK', 'VTI', 'VOO', 'SCHD',
+        'PBR', 'VALE', 'MELI', 'SE', 'GRAB', 'NBIS', 'ASTS',
+    }
+    bare_tickers = re.findall(r'\b([A-Z]{1,5})\b', text_str)
+    bare_matches = [t for t in bare_tickers if t in known_tickers]
+
     # Filter common false positives
-    blacklist = {'USD', 'CAD', 'EUR', 'GBP', 'AUD', 'JPY', 'CNY', 'THE', 'ALL', 'FOR', 'ARE', 'NOT', 'BUT', 'HAS', 'HIS', 'HOW', 'ITS', 'MAY', 'NEW', 'NOW', 'OLD', 'SEE', 'WAY', 'WHO', 'DID', 'GET', 'HIM', 'LET', 'SAY', 'SHE', 'TOO', 'USE'}
-    return list(set(t for t in tickers if t not in blacklist))
+    blacklist = {'USD', 'CAD', 'EUR', 'GBP', 'AUD', 'JPY', 'CNY', 'THE', 'ALL',
+                 'FOR', 'ARE', 'NOT', 'BUT', 'HAS', 'HIS', 'HOW', 'ITS', 'MAY',
+                 'NEW', 'NOW', 'OLD', 'SEE', 'WAY', 'WHO', 'DID', 'GET', 'HIM',
+                 'LET', 'SAY', 'SHE', 'TOO', 'USE', 'FDA', 'CEO', 'IPO', 'ETF',
+                 'AI', 'US', 'UK', 'EU', 'GDP', 'CPI', 'FED', 'SEC', 'IRS',
+                 'ATH', 'DD', 'YOLO', 'FOMO', 'IMO', 'PSA', 'TIL', 'ELI',
+                 'AMA', 'ITM', 'OTM', 'ATM', 'IV', 'PE', 'EPS', 'ER', 'PT',
+                 'EDIT', 'RIP', 'FYI', 'BTW', 'LMAO', 'TLDR', 'OG'}
+
+    all_tickers = set(dollar_tickers + bare_matches) - blacklist
+    return list(all_tickers)
 
 def scrape_finance():
     miner = YARS()
@@ -159,7 +191,7 @@ Provide your analysis as JSON with these exact keys:
 
 - "themes": array of 4-6 objects, each with "title" (short label, 3-6 words) and "explanation" (2-3 sentences in plain English describing what people are talking about and why it matters for investors)
 
-- "tickers_to_watch": array of 5 objects, each with "ticker" (string), "sentiment" ("bullish"/"bearish"/"neutral"), and "reason" (2-3 sentences in plain English explaining why this stock is worth watching right now, what the Reddit community thinks, and what could move the price)
+- "tickers_to_watch": array of 5 objects, each with "ticker" (string), "sentiment" ("bullish"/"bearish"/"neutral"), and "reason" (2-3 sentences in plain English explaining why this stock is worth watching right now, what the Reddit community thinks, and what could move the price). IMPORTANT: Only pick tickers that are actually mentioned in the top ticker list or discussed in the top posts above. Do NOT recommend tickers from your general knowledge that are not present in this Reddit data.
 
 - "risk_factors": array of 3-4 objects, each with "title" (short label) and "explanation" (2-3 sentences in plain English explaining the risk and how it could impact regular investors)
 
