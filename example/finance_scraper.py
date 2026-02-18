@@ -506,7 +506,7 @@ if __name__ == "__main__":
     posts_df.to_csv('reddit_finance_posts.csv', index=False)
     print(f"💾 Saved: reddit_finance_posts.csv")
 
-    # Ticker analysis
+    # Ticker analysis (posts only — will recalculate after comments)
     all_tickers = []
     for tickers in posts_df['tickers']:
         if isinstance(tickers, list):
@@ -535,6 +535,24 @@ if __name__ == "__main__":
         comments_df.to_csv('reddit_comments.csv', index=False)
         print(f"\n✅ Comments scraped: {len(comments_df)}")
         print(f"💾 Saved: reddit_comments.csv")
+
+    # Recalculate ticker counts including comments
+    all_tickers = []
+    for tickers in posts_df['tickers']:
+        if isinstance(tickers, list):
+            all_tickers.extend(tickers)
+    if len(comments_df) > 0:
+        for tickers in comments_df['tickers']:
+            if isinstance(tickers, list):
+                all_tickers.extend(tickers)
+
+    ticker_counts = pd.Series(all_tickers).value_counts() if all_tickers else pd.Series(dtype=int)
+
+    if len(ticker_counts) > 0:
+        print("\n📈 Top 15 Tickers (posts + comments):")
+        print("-" * 40)
+        for i, (ticker, count) in enumerate(ticker_counts.head(15).items(), 1):
+            print(f"{i:2d}. ${ticker:5s} - {count:3d} mentions")
 
     # AI Analysis
     print("\n[STEP 3] Running AI analysis...")
