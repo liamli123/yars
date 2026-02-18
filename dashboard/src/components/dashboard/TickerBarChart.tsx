@@ -30,7 +30,7 @@ export default function TickerBarChart({ data, selectedTicker, onTickerClick }: 
         Top Ticker Mentions
       </h2>
       <p className="text-xs text-gray-500 mb-4">
-        Click a ticker to see detailed analysis
+        Across all posts and comments — click a ticker for detailed analysis
       </p>
       <ResponsiveContainer width="100%" height={350}>
         <BarChart data={data} layout="vertical" margin={{ left: 10, right: 20 }}>

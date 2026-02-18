@@ -417,14 +417,19 @@ def build_dashboard_data(posts_df, comments_df, ticker_counts, subreddits, ai_an
                 'total_score': int(sub_posts['score'].sum()),
             }
 
-    # Per-subreddit ticker breakdown
+    # Per-subreddit ticker breakdown (posts + comments)
     subreddit_tickers = {}
     for sub in subreddits:
-        sub_posts = posts_df[posts_df['subreddit'] == sub]
         sub_tickers = []
+        sub_posts = posts_df[posts_df['subreddit'] == sub]
         for tickers in sub_posts['tickers']:
             if isinstance(tickers, list):
                 sub_tickers.extend(tickers)
+        if len(comments_df) > 0:
+            sub_comments = comments_df[comments_df['subreddit'] == sub]
+            for tickers in sub_comments['tickers']:
+                if isinstance(tickers, list):
+                    sub_tickers.extend(tickers)
         if sub_tickers:
             subreddit_tickers[sub] = dict(pd.Series(sub_tickers).value_counts().head(20))
 
