@@ -17,8 +17,38 @@ import time
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-b2a06327ea434feb94b361a1e33f8eb5")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 
+COMPANY_TO_TICKER = {
+    'apple': 'AAPL', 'microsoft': 'MSFT', 'google': 'GOOGL', 'alphabet': 'GOOGL',
+    'amazon': 'AMZN', 'meta': 'META', 'facebook': 'META', 'tesla': 'TSLA',
+    'nvidia': 'NVDA', 'amd': 'AMD', 'netflix': 'NFLX', 'robinhood': 'HOOD',
+    'snapchat': 'SNAP', 'alibaba': 'BABA', 'nio': 'NIO', 'palantir': 'PLTR',
+    'sofi': 'SOFI', 'rivian': 'RIVN', 'lucid': 'LCID', 'gamestop': 'GME',
+    'intel': 'INTC', 'micron': 'MU', 'qualcomm': 'QCOM', 'salesforce': 'CRM',
+    'oracle': 'ORCL', 'uber': 'UBER', 'lyft': 'LYFT', 'coinbase': 'COIN',
+    'block': 'SQ', 'square': 'SQ', 'paypal': 'PYPL', 'visa': 'V',
+    'mastercard': 'MA', 'jpmorgan': 'JPM', 'jp morgan': 'JPM',
+    'goldman': 'GS', 'goldman sachs': 'GS', 'morgan stanley': 'MS',
+    'wells fargo': 'WFC', 'schwab': 'SCHW', 'ford': 'F',
+    'general motors': 'GM', 'toyota': 'TM', 'disney': 'DIS',
+    'comcast': 'CMCSA', 'at&t': 'T', 'verizon': 'VZ', 't-mobile': 'TMUS',
+    'johnson & johnson': 'JNJ', 'pfizer': 'PFE', 'moderna': 'MRNA',
+    'unitedhealth': 'UNH', 'eli lilly': 'LLY', 'lilly': 'LLY',
+    'abbvie': 'ABBV', 'merck': 'MRK', 'walmart': 'WMT', 'costco': 'COST',
+    'target': 'TGT', 'home depot': 'HD', 'lowes': 'LOW', "lowe's": 'LOW',
+    'starbucks': 'SBUX', "mcdonald's": 'MCD', 'mcdonalds': 'MCD',
+    'mcdonald': 'MCD', 'nike': 'NKE', 'exxon': 'XOM', 'chevron': 'CVX',
+    'boeing': 'BA', 'lockheed': 'LMT', 'raytheon': 'RTX',
+    'carvana': 'CVNA', 'spotify': 'SPOT', 'roku': 'ROKU', 'roblox': 'RBLX',
+    'airbnb': 'ABNB', 'draftkings': 'DKNG', 'petrobras': 'PBR',
+    'hims': 'HIMS', 'broadcom': 'AVGO', 'microstrategy': 'MSTR',
+    'berkshire': 'BRK', 'paramount': 'PARA', 'warner bros': 'WBD',
+    'novo nordisk': 'NVO', 'nintendo': 'NTDOY', 'samsung': 'SSNLF',
+    'snowflake': 'SNOW', 'crowdstrike': 'CRWD', 'datadog': 'DDOG',
+    'shopify': 'SHOP', 'twilio': 'TWLO', 'zoom': 'ZM',
+}
+
 def extract_tickers(text):
-    """Extract stock tickers like $TSLA, AAPL, or well-known company names"""
+    """Extract stock tickers from $TICKER, bare uppercase tickers, and company names"""
     if not text:
         return []
     text_str = str(text)
@@ -26,8 +56,7 @@ def extract_tickers(text):
     # Match $TICKER format
     dollar_tickers = re.findall(r'\$([A-Z]{1,5})\b', text_str)
 
-    # Match standalone uppercase tickers (2-5 chars, surrounded by spaces/punctuation)
-    # Only match known popular tickers to avoid false positives
+    # Match standalone uppercase tickers (2-5 chars)
     known_tickers = {
         'AAPL', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'META', 'TSLA', 'NVDA', 'AMD',
         'NFLX', 'HOOD', 'SNAP', 'BABA', 'NIO', 'PLTR', 'SOFI', 'RIVN', 'LCID',
@@ -41,9 +70,18 @@ def extract_tickers(text):
         'HIMS', 'CVNA', 'SPOT', 'ROKU', 'RBLX', 'ABNB', 'DKNG',
         'XLE', 'XLF', 'XLK', 'ARKK', 'VTI', 'VOO', 'SCHD',
         'PBR', 'VALE', 'MELI', 'SE', 'GRAB', 'NBIS', 'ASTS',
+        'AVGO', 'MSTR', 'BRK', 'PARA', 'WBD', 'NVO', 'SNOW',
+        'CRWD', 'DDOG', 'SHOP', 'TWLO', 'ZM',
     }
     bare_tickers = re.findall(r'\b([A-Z]{1,5})\b', text_str)
     bare_matches = [t for t in bare_tickers if t in known_tickers]
+
+    # Match company names (case-insensitive)
+    text_lower = text_str.lower()
+    name_matches = []
+    for name, ticker in COMPANY_TO_TICKER.items():
+        if name in text_lower:
+            name_matches.append(ticker)
 
     # Filter common false positives
     blacklist = {'USD', 'CAD', 'EUR', 'GBP', 'AUD', 'JPY', 'CNY', 'THE', 'ALL',
@@ -55,7 +93,7 @@ def extract_tickers(text):
                  'AMA', 'ITM', 'OTM', 'ATM', 'IV', 'PE', 'EPS', 'ER', 'PT',
                  'EDIT', 'RIP', 'FYI', 'BTW', 'LMAO', 'TLDR', 'OG'}
 
-    all_tickers = set(dollar_tickers + bare_matches) - blacklist
+    all_tickers = set(dollar_tickers + bare_matches + name_matches) - blacklist
     return list(all_tickers)
 
 def scrape_finance():
