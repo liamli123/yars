@@ -511,8 +511,10 @@ if __name__ == "__main__":
     posts_df = scrape_finance()
 
     if len(posts_df) == 0:
-        print("\n❌ No posts scraped")
-        exit()
+        print("\n❌ No posts scraped - Reddit is likely blocking this IP.")
+        print("   Set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET to use the")
+        print("   official API instead (free app: https://www.reddit.com/prefs/apps)")
+        sys.exit(1)
 
     print(f"\n✅ Total posts: {len(posts_df)}")
 

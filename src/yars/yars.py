@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import random
 import time
 
@@ -16,14 +17,57 @@ SUBREDDIT_CATEGORIES = ("hot", "top", "new")
 USER_CATEGORIES = ("userhot", "usertop", "usernew")
 TIME_FILTERS = ("hour", "day", "week", "month", "year", "all")
 
+TOKEN_URL = "https://www.reddit.com/api/v1/access_token"
+DEFAULT_OAUTH_USER_AGENT = "yars/0.1 (Reddit data scraper)"
+
 
 class YARS:
-    __slots__ = ("session", "proxy", "timeout")
+    """Reddit scraper.
 
-    def __init__(self, proxy=None, timeout=10, random_user_agent=True):
-        self.session = (
-            RandomUserAgentSession() if random_user_agent else requests.Session()
-        )
+    Works in two modes:
+    - Anonymous: hits the public www.reddit.com/*.json endpoints. No setup,
+      but Reddit blocks many IPs (datacenters, some residential ranges).
+    - Authenticated: pass client_id/client_secret (or set REDDIT_CLIENT_ID /
+      REDDIT_CLIENT_SECRET env vars) from a free "script" app created at
+      https://www.reddit.com/prefs/apps. Requests then go to
+      oauth.reddit.com, which works from blocked IPs and has a higher
+      rate limit.
+    """
+
+    __slots__ = (
+        "session",
+        "proxy",
+        "timeout",
+        "_auth",
+        "_token",
+        "_token_expiry",
+    )
+
+    def __init__(
+        self,
+        proxy=None,
+        timeout=10,
+        random_user_agent=True,
+        client_id=None,
+        client_secret=None,
+        user_agent=None,
+    ):
+        client_id = client_id or os.environ.get("REDDIT_CLIENT_ID")
+        client_secret = client_secret or os.environ.get("REDDIT_CLIENT_SECRET")
+        self._auth = (client_id, client_secret) if client_id and client_secret else None
+        self._token = None
+        self._token_expiry = 0.0
+
+        if self._auth:
+            # Reddit's API rules require a stable, descriptive user agent
+            # for authenticated clients - never a rotating browser one.
+            self.session = requests.Session()
+            self.session.headers["User-Agent"] = user_agent or DEFAULT_OAUTH_USER_AGENT
+        elif random_user_agent:
+            self.session = RandomUserAgentSession()
+        else:
+            self.session = requests.Session()
+
         self.proxy = proxy
         self.timeout = timeout
 
@@ -37,8 +81,40 @@ class YARS:
         if proxy:
             self.session.proxies.update({"http": proxy, "https": proxy})
 
-    def _get_json(self, url, params=None):
-        """Fetch a URL and return parsed JSON, or None on any failure."""
+    def _ensure_token(self):
+        """Fetch or refresh the OAuth app-only token."""
+        if self._token and time.time() < self._token_expiry - 60:
+            return
+        try:
+            response = self.session.post(
+                TOKEN_URL,
+                auth=self._auth,
+                data={"grant_type": "client_credentials"},
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            token_data = response.json()
+            self._token = token_data["access_token"]
+        except (requests.RequestException, KeyError, ValueError) as e:
+            raise RuntimeError(
+                "Reddit OAuth token request failed - check REDDIT_CLIENT_ID / "
+                f"REDDIT_CLIENT_SECRET: {e}"
+            ) from e
+        self._token_expiry = time.time() + token_data.get("expires_in", 3600)
+        self.session.headers["Authorization"] = f"bearer {self._token}"
+        logger.info("Obtained Reddit OAuth token")
+
+    def _url(self, path):
+        """Build the full URL for a Reddit API path like '/r/python/hot'."""
+        if self._auth:
+            return f"https://oauth.reddit.com{path}"
+        return f"https://www.reddit.com{path}.json"
+
+    def _get_json(self, path, params=None):
+        """Fetch a Reddit API path and return parsed JSON, or None on failure."""
+        if self._auth:
+            self._ensure_token()
+        url = self._url(path)
         try:
             response = self.session.get(url, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -51,13 +127,13 @@ class YARS:
             logger.warning("Invalid JSON from %s: %s", url, e)
             return None
 
-    def handle_search(self, url, params, after=None, before=None):
+    def handle_search(self, path, params, after=None, before=None):
         if after:
             params["after"] = after
         if before:
             params["before"] = before
 
-        data = self._get_json(url, params)
+        data = self._get_json(path, params)
         if data is None:
             return []
 
@@ -75,14 +151,12 @@ class YARS:
         return results
 
     def search_reddit(self, query, limit=10, after=None, before=None, sort="relevance"):
-        url = "https://www.reddit.com/search.json"
         params = {"q": query, "limit": limit, "sort": sort, "type": "link"}
-        return self.handle_search(url, params, after, before)
+        return self.handle_search("/search", params, after, before)
 
     def search_subreddit(
         self, subreddit, query, limit=10, after=None, before=None, sort="relevance"
     ):
-        url = f"https://www.reddit.com/r/{subreddit}/search.json"
         params = {
             "q": query,
             "limit": limit,
@@ -90,16 +164,16 @@ class YARS:
             "type": "link",
             "restrict_sr": "on",
         }
-        return self.handle_search(url, params, after, before)
+        return self.handle_search(f"/r/{subreddit}/search", params, after, before)
 
     def scrape_post_details(self, permalink):
-        url = f"https://www.reddit.com{permalink}.json"
-        post_data = self._get_json(url)
+        path = permalink.rstrip("/")
+        post_data = self._get_json(path)
         if post_data is None:
             return None
 
         if not isinstance(post_data, list) or len(post_data) < 2:
-            logger.warning("Unexpected post data structure for %s", url)
+            logger.warning("Unexpected post data structure for %s", path)
             return None
 
         main_post = post_data[0]["data"]["children"][0]["data"]
@@ -132,13 +206,13 @@ class YARS:
 
     def scrape_user_data(self, username, limit=10):
         logger.info("Scraping user data for %s, limit: %d", username, limit)
-        base_url = f"https://www.reddit.com/user/{username}/.json"
+        path = f"/user/{username}/overview"
         after = None
         all_items = []
 
         while len(all_items) < limit:
             params = {"limit": min(100, limit - len(all_items)), "after": after}
-            data = self._get_json(base_url, params)
+            data = self._get_json(path, params)
             if data is None:
                 break
 
@@ -205,9 +279,11 @@ class YARS:
             raise ValueError(f"time_filter must be one of {TIME_FILTERS}")
 
         if category in USER_CATEGORIES:
-            url = f"https://www.reddit.com/user/{subreddit}/submitted/{category[4:]}.json"
+            path = f"/user/{subreddit}/submitted"
+            params_extra = {"sort": category[4:]}
         else:
-            url = f"https://www.reddit.com/r/{subreddit}/{category}.json"
+            path = f"/r/{subreddit}/{category}"
+            params_extra = {}
 
         after = None
         all_posts = []
@@ -218,8 +294,9 @@ class YARS:
                 "after": after,
                 "raw_json": 1,
                 "t": time_filter,
+                **params_extra,
             }
-            data = self._get_json(url, params)
+            data = self._get_json(path, params)
             if data is None:
                 break
 
