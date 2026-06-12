@@ -70,6 +70,20 @@ export interface AiAnalysis {
   risk_factors: (RiskFactor | string)[];
   contrarian_views: (ContrarianView | string)[];
   sector_breakdown: Record<string, number>;
+  discussion_digest?: string[];
+}
+
+export interface TickerStat {
+  name: string;
+  mentions: number;
+  mentions_24h_ago: number;
+  rank: number;
+  rank_24h_ago: number;
+  upvotes: number;
+  bullish: number;
+  bearish: number;
+  message_count: number;
+  blurb: string;
 }
 
 export interface DashboardData {
@@ -78,8 +92,10 @@ export interface DashboardData {
   posts: Post[];
   comments: Comment[];
   ticker_mentions: Record<string, number>;
+  ticker_stats?: Record<string, TickerStat>;
   subreddit_tickers: Record<string, Record<string, number>>;
   subreddit_stats: Record<string, SubredditStats>;
+  yahoo_trending?: string[];
   ai_analysis: AiAnalysis;
   ticker_details: Record<string, TickerDetail>;
 }

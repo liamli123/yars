@@ -1,16 +1,13 @@
 import { DashboardData } from "@/lib/types";
-import {
-  getTickerChartData,
-  getTimelineData,
-  getSubredditTickerData,
-} from "@/lib/data";
+import { getTimelineData, getSubredditTickerData } from "@/lib/data";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import TickerDetailSection from "@/components/dashboard/TickerDetailSection";
+import BuzzBoard from "@/components/dashboard/BuzzBoard";
+import DiscussionDigest from "@/components/dashboard/DiscussionDigest";
 import SentimentDonut from "@/components/dashboard/SentimentDonut";
 import TimelineArea from "@/components/dashboard/TimelineArea";
 import SubredditTickerChart from "@/components/dashboard/SubredditTickerChart";
 import AiInsightsPanel from "@/components/dashboard/AiInsightsPanel";
-import TopPostsTable from "@/components/dashboard/TopPostsTable";
+import RawMessages from "@/components/dashboard/RawMessages";
 import { readFileSync } from "fs";
 import path from "path";
 
@@ -32,31 +29,37 @@ export default function Home() {
         sourceCount={data.subreddits.length}
       />
 
-      {/* AI Insights */}
-      <AiInsightsPanel analysis={data.ai_analysis} tickerDetails={data.ticker_details || {}} />
+      {/* AI market overview */}
+      <AiInsightsPanel
+        analysis={data.ai_analysis}
+        tickerDetails={data.ticker_details || {}}
+      />
 
-      {/* Charts Grid */}
+      {/* Per-ticker buzz cards */}
+      <BuzzBoard
+        tickerStats={data.ticker_stats || {}}
+        tickerDetails={data.ticker_details || {}}
+      />
+
+      {/* AI digest of all collected messages */}
+      <DiscussionDigest
+        digest={data.ai_analysis.discussion_digest || []}
+        yahooTrending={data.yahoo_trending}
+      />
+
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <TickerDetailSection
-          chartData={getTickerChartData(data)}
-          tickerDetails={data.ticker_details || {}}
-        />
+        <TimelineArea data={getTimelineData(data)} />
         <SentimentDonut sectorBreakdown={data.ai_analysis.sector_breakdown} />
       </div>
 
-      {/* Timeline - full width */}
-      <div className="mt-6">
-        <TimelineArea data={getTimelineData(data)} />
-      </div>
-
-      {/* Subreddit Ticker Comparison - full width */}
       <SubredditTickerChart
         data={getSubredditTickerData(data)}
         subreddits={data.subreddits}
       />
 
-      {/* Posts Table */}
-      <TopPostsTable posts={data.posts} />
+      {/* Raw messages, collapsed by default */}
+      <RawMessages posts={data.posts} />
 
       {/* Footer */}
       <footer className="mt-8 py-4 border-t border-gray-800 text-center text-xs text-gray-600">

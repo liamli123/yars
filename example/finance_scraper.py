@@ -242,10 +242,14 @@ Provide your analysis as JSON with these exact keys:
 
 - "sector_breakdown": object mapping sector names to approximate mention counts based on the tickers above (e.g. "Technology": 45)
 
+- "discussion_digest": array of exactly 3 paragraph strings (3-5 sentences each) summarizing what the community is talking about overall today, in plain conversational English. Name specific tickers and the stories behind them. Paragraph 1: the biggest story/mover. Paragraph 2: other notable discussions. Paragraph 3: the overall vibe and disagreements.
+
+- "ticker_blurbs": object mapping EVERY ticker symbol that appears in the Stocktwits sentiment data above to a 1-2 sentence plain-English summary of what people are saying about that stock right now
+
 Return ONLY valid JSON, no markdown."""
 
     try:
-        analysis = deepseek_json(client, prompt, max_tokens=4000)
+        analysis = deepseek_json(client, prompt, max_tokens=6000)
         print("   ✓ AI analysis complete")
         return analysis
     except Exception as e:
@@ -344,6 +348,26 @@ def build_dashboard_data(apewisdom, ticker_messages, yahoo_trending, ai_analysis
                          ticker_details):
     sources = ["reddit", "stocktwits"]
 
+    # Per-ticker buzz stats for the dashboard's ticker cards
+    blurbs = (ai_analysis or {}).pop("ticker_blurbs", {}) or {}
+    mentions_by_ticker = {t["ticker"]: t for t in apewisdom}
+    ticker_stats = {}
+    for ticker, messages in ticker_messages.items():
+        bullish, bearish = sentiment_ratio(messages)
+        stats = mentions_by_ticker.get(ticker, {})
+        ticker_stats[ticker] = {
+            "name": stats.get("name", ""),
+            "mentions": stats.get("mentions", 0),
+            "mentions_24h_ago": stats.get("mentions_24h_ago", 0),
+            "rank": stats.get("rank", 0),
+            "rank_24h_ago": stats.get("rank_24h_ago", 0),
+            "upvotes": stats.get("upvotes", 0),
+            "bullish": bullish,
+            "bearish": bearish,
+            "message_count": len(messages),
+            "blurb": blurbs.get(ticker, ""),
+        }
+
     # Posts list = Stocktwits messages, shaped like the dashboard's Post type
     posts = []
     for ticker, messages in ticker_messages.items():
@@ -398,6 +422,7 @@ def build_dashboard_data(apewisdom, ticker_messages, yahoo_trending, ai_analysis
             "risk_factors": [],
             "contrarian_views": [],
             "sector_breakdown": {},
+            "discussion_digest": [],
         }
 
     return {
@@ -406,6 +431,7 @@ def build_dashboard_data(apewisdom, ticker_messages, yahoo_trending, ai_analysis
         "posts": posts,
         "comments": [],
         "ticker_mentions": ticker_mentions,
+        "ticker_stats": ticker_stats,
         "subreddit_tickers": subreddit_tickers,
         "subreddit_stats": subreddit_stats,
         "yahoo_trending": yahoo_trending,
