@@ -150,7 +150,7 @@ export default function AiInsightsPanel({ analysis, tickerDetails = {} }: Props)
             {analysis.themes.map((theme, i) => (
               <div key={i}>
                 <div className="flex gap-2 items-start">
-                  <span className="text-violet-400 mt-0.5 flex-shrink-0 font-bold">{i + 1}.</span>
+                  <span className="text-gray-500 mt-0.5 flex-shrink-0 font-bold">{i + 1}.</span>
                   <div>
                     <p className="text-sm font-medium text-gray-200">{getThemeTitle(theme)}</p>
                     {getThemeExplanation(theme) && (
@@ -170,7 +170,7 @@ export default function AiInsightsPanel({ analysis, tickerDetails = {} }: Props)
           <h3 className="text-sm font-medium text-gray-400 mb-4 uppercase tracking-wider">Risk Factors</h3>
           <div className="space-y-4">
             {analysis.risk_factors.map((risk, i) => (
-              <div key={i} className="bg-red-500/5 border border-red-500/10 rounded-lg p-3">
+              <div key={i} className="bg-gray-800/30 border border-gray-800 rounded-lg p-3">
                 <div className="flex gap-2 items-start">
                   <span className="text-red-400 mt-0.5 flex-shrink-0">!</span>
                   <div>
@@ -192,7 +192,7 @@ export default function AiInsightsPanel({ analysis, tickerDetails = {} }: Props)
           <h3 className="text-sm font-medium text-gray-400 mb-4 uppercase tracking-wider">Contrarian Views</h3>
           <div className="space-y-4">
             {analysis.contrarian_views.map((view, i) => (
-              <div key={i} className="bg-amber-500/5 border border-amber-500/10 rounded-lg p-3">
+              <div key={i} className="bg-gray-800/30 border border-gray-800 rounded-lg p-3">
                 <div className="flex gap-2 items-start">
                   <span className="text-amber-400 mt-0.5 flex-shrink-0">?</span>
                   <div>

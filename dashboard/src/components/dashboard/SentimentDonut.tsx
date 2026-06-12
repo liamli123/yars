@@ -8,12 +8,12 @@ interface Props {
 
 const COLORS = [
   "#8b5cf6",
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#ec4899",
-  "#06b6d4",
+  "#a78bfa",
+  "#6d28d9",
+  "#c4b5fd",
+  "#64748b",
+  "#94a3b8",
+  "#475569",
 ];
 
 export default function SentimentDonut({ sectorBreakdown }: Props) {

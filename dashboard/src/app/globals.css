@@ -10,7 +10,7 @@
 body {
   color: var(--foreground);
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 80, 255, 0.13), transparent),
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 80, 255, 0.05), transparent),
     var(--background);
   background-attachment: fixed;
 }

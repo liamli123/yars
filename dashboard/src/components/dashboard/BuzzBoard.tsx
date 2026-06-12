@@ -35,11 +35,11 @@ function SentimentBar({ bullish, bearish }: { bullish: number; bearish: number }
   const bullPct = (bullish / total) * 100;
   return (
     <div
-      className="h-1.5 rounded-full bg-red-500/70 overflow-hidden flex"
+      className="h-1.5 rounded-full bg-red-500/40 overflow-hidden flex"
       title={`${bullish} bullish / ${bearish} bearish`}
     >
       <div
-        className="h-full bg-emerald-500 rounded-l-full"
+        className="h-full bg-emerald-500/70 rounded-l-full"
         style={{ width: `${bullPct}%` }}
       />
     </div>
@@ -103,7 +103,7 @@ export default function BuzzBoard({ tickerStats, tickerDetails }: Props) {
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-2xl font-bold text-violet-300 tabular-nums">
+                <span className="text-2xl font-bold text-white tabular-nums">
                   {s.mentions.toLocaleString()}
                 </span>
                 <span className="text-xs text-gray-500">mentions</span>
@@ -116,7 +116,7 @@ export default function BuzzBoard({ tickerStats, tickerDetails }: Props) {
                 </p>
               )}
               {tickerDetails[ticker] && (
-                <p className="text-xs text-violet-400/70 mt-2">
+                <p className="text-xs text-gray-500 mt-2">
                   {isSelected ? "▲ Hide deep-dive" : "▼ AI deep-dive"}
                 </p>
               )}

@@ -7,7 +7,7 @@ export default function DiscussionDigest({ digest, yahooTrending = [] }: Props) 
   if (digest.length === 0) return null;
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 to-gray-900/60 border border-gray-800 rounded-xl p-4 sm:p-6 mt-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 mt-6">
       <div className="flex items-center gap-3 mb-4">
         <h2 className="text-lg font-semibold text-white">
           What Everyone&apos;s Saying
@@ -32,7 +32,7 @@ export default function DiscussionDigest({ digest, yahooTrending = [] }: Props) 
             {yahooTrending.slice(0, 10).map((t) => (
               <span
                 key={t}
-                className="text-xs bg-violet-500/10 text-violet-300 border border-violet-500/20 px-2 py-1 rounded-full"
+                className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded-full"
               >
                 {t}
               </span>

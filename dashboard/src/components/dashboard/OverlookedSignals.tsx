@@ -40,10 +40,10 @@ export default function OverlookedSignals({
   }
 
   return (
-    <div className="bg-gradient-to-br from-violet-950/30 to-gray-900 border border-violet-500/20 rounded-xl p-4 sm:p-6 mt-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 mt-6">
       <div className="flex items-center gap-3 mb-1">
         <h2 className="text-lg font-semibold text-white">Overlooked Signals</h2>
-        <span className="text-xs text-violet-300 bg-violet-500/10 border border-violet-500/20 px-2 py-1 rounded">
+        <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
           deep analysis
         </span>
       </div>
@@ -60,7 +60,7 @@ export default function OverlookedSignals({
             return (
               <div
                 key={i}
-                className="bg-gray-900/80 border border-gray-800 rounded-lg p-4"
+                className="bg-gray-800/30 border border-gray-800 rounded-lg p-4"
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h3 className="text-sm font-semibold text-white leading-snug">
@@ -76,7 +76,7 @@ export default function OverlookedSignals({
                   {ins.tickers.map((t) => (
                     <span
                       key={t}
-                      className="text-xs bg-gray-800 text-emerald-400 px-1.5 py-0.5 rounded"
+                      className="text-xs bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded"
                     >
                       ${t}
                     </span>
@@ -88,7 +88,7 @@ export default function OverlookedSignals({
                 <p className="text-xs text-gray-500 leading-relaxed border-l-2 border-gray-700 pl-3 mb-2">
                   {ins.evidence}
                 </p>
-                <p className="text-xs text-violet-300/70 italic">
+                <p className="text-xs text-gray-500 italic">
                   Why it&apos;s overlooked: {ins.why_overlooked}
                 </p>
               </div>
@@ -108,14 +108,14 @@ export default function OverlookedSignals({
               {catalysts.map((c, i) => (
                 <div
                   key={i}
-                  className="flex gap-3 items-start bg-gray-900/60 border border-gray-800 rounded-lg p-3"
+                  className="flex gap-3 items-start bg-gray-800/30 border border-gray-800 rounded-lg p-3"
                 >
-                  <span className="text-xs font-semibold text-violet-300 bg-violet-500/10 px-2 py-1 rounded shrink-0">
+                  <span className="text-xs font-semibold text-gray-300 bg-gray-800 px-2 py-1 rounded shrink-0">
                     {c.when}
                   </span>
                   <div>
                     <p className="text-sm text-gray-200">
-                      <span className="text-emerald-400 font-medium">
+                      <span className="text-violet-300 font-medium">
                         ${c.ticker}
                       </span>{" "}
                       — {c.event}
@@ -140,9 +140,9 @@ export default function OverlookedSignals({
               {crowdVsNews.map((c, i) => (
                 <div
                   key={i}
-                  className="bg-gray-900/60 border border-gray-800 rounded-lg p-3"
+                  className="bg-gray-800/30 border border-gray-800 rounded-lg p-3"
                 >
-                  <span className="text-sm font-semibold text-emerald-400">
+                  <span className="text-sm font-semibold text-violet-300">
                     ${c.ticker}
                   </span>
                   <div className="mt-2 space-y-1.5 text-xs leading-relaxed">
@@ -159,7 +159,7 @@ export default function OverlookedSignals({
                       <span className="text-gray-300">{c.crowd_view}</span>
                     </p>
                     <p>
-                      <span className="text-violet-300/80 uppercase tracking-wider mr-1">
+                      <span className="text-gray-400 uppercase tracking-wider mr-1">
                         Verdict:
                       </span>
                       <span className="text-gray-400 italic">

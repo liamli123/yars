@@ -95,7 +95,7 @@ export default function TopPostsTable({ posts }: { posts: Post[] }) {
                     {post.tickers.slice(0, 3).map((t) => (
                       <span
                         key={t}
-                        className="text-xs bg-gray-800 text-emerald-400 px-1.5 py-0.5 rounded"
+                        className="text-xs bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded"
                       >
                         ${t}
                       </span>

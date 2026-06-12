@@ -34,13 +34,13 @@ export default function TimelineArea({ data }: { data: DataPoint[] }) {
               <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="gradScore" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+              <stop offset="5%" stopColor="#64748b" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#64748b" stopOpacity={0} />
             </linearGradient>
           </defs>
           <XAxis dataKey="time" stroke="#4b5563" fontSize={11} angle={-30} textAnchor="end" height={60} />
           <YAxis yAxisId="left" stroke="#8b5cf6" fontSize={12} />
-          <YAxis yAxisId="right" orientation="right" stroke="#10b981" fontSize={12} />
+          <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={12} />
           <Tooltip
             contentStyle={{
               backgroundColor: "#1f2937",
@@ -64,7 +64,7 @@ export default function TimelineArea({ data }: { data: DataPoint[] }) {
             type="monotone"
             dataKey="avgScore"
             name="Avg Score"
-            stroke="#10b981"
+            stroke="#64748b"
             fill="url(#gradScore)"
             strokeWidth={2}
           />

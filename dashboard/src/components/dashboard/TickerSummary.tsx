@@ -24,8 +24,8 @@ export default function TickerSummary({ ticker, detail }: Props) {
         </span>
       </div>
       {detail.mention_count <= 2 && (
-        <div className="bg-amber-500/5 border border-amber-500/10 rounded-lg p-3 mb-4">
-          <p className="text-xs text-amber-400">
+        <div className="bg-gray-800/30 border border-gray-800 rounded-lg p-3 mb-4">
+          <p className="text-xs text-gray-400">
             Low mention count — summary includes general market context to supplement limited Reddit discussion.
           </p>
         </div>
