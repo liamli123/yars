@@ -34,7 +34,7 @@ YARS is a Python package designed to simplify the process of scraping Reddit for
 1. Clone the repository:
 
    ```
-   git clone https://github.com/datavorous/YARS.git
+   git clone https://github.com/liamli123/yars.git
    ```
    Navigate inside the ```src``` folder.
 
@@ -64,7 +64,7 @@ We will use the following Python script to demonstrate the functionality of the 
 
 ```python
 from yars import YARS
-from utils import display_results, download_image
+from yars.utils import display_results, download_image
 
 miner = YARS()
 ```
@@ -126,7 +126,7 @@ for z in range(3):
 
 ```python
 from yars import YARS
-from utils import display_results, download_image
+from yars.utils import display_results, download_image
 
 miner = YARS()
 

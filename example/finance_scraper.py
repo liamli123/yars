@@ -14,7 +14,7 @@ import pandas as pd
 import re
 import time
 
-DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-b2a06327ea434feb94b361a1e33f8eb5")
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 
 COMPANY_TO_TICKER = {
@@ -151,6 +151,9 @@ def get_comments(df, top_n=100):
 
         try:
             post_data = miner.scrape_post_details(permalink)
+            if not post_data:
+                print("   ✗ Failed to fetch post details, skipping")
+                continue
             comments = post_data.get('comments', [])
 
             for comment in comments:
@@ -174,6 +177,9 @@ def get_comments(df, top_n=100):
 
 def get_ai_analysis(posts_df, ticker_counts, comments_df, subreddits):
     """Use DeepSeek API to analyze scraped data"""
+    if not DEEPSEEK_API_KEY:
+        print("   ⚠ DEEPSEEK_API_KEY not set, skipping AI analysis")
+        return None
     try:
         from openai import OpenAI
     except ImportError:
@@ -263,6 +269,9 @@ Return ONLY valid JSON, no markdown."""
 
 def get_ticker_details(posts_df, comments_df, ticker_counts, ai_analysis=None):
     """Use DeepSeek API to generate per-ticker summaries and sentiment factors"""
+    if not DEEPSEEK_API_KEY:
+        print("   ⚠ DEEPSEEK_API_KEY not set, skipping ticker details")
+        return {}
     try:
         from openai import OpenAI
     except ImportError:

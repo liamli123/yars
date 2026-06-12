@@ -38,4 +38,11 @@ jobs:
           git push
 
       - name: Trigger Vercel rebuild
-        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$HOOK" ]; then
+            curl -X POST "$HOOK"
+          else
+            echo "VERCEL_DEPLOY_HOOK not configured, skipping"
+          fi

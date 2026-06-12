@@ -1,11 +1,10 @@
 [project]
-name = "sm"
+name = "yars"
 version = "0.1.0"
-description = "Add your description here"
+description = "YARS (Yet Another Reddit Scraper) - scrape Reddit posts, comments, and user data via the public JSON API"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
-    "flask>=3.0.3",
     "meta-ai-api>=1.2.1",
     "pygments>=2.18.0",
     "requests>=2.32.3",

@@ -1,24 +1,29 @@
 from __future__ import annotations
-from .sessions import RandomUserAgentSession
-import time
-import random
-import logging
-import requests
-from urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
 
-logger = logging.basicConfig(
-    filename="YARS.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
+import logging
+import random
+import time
+
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+from .sessions import RandomUserAgentSession
+
+logger = logging.getLogger(__name__)
+
+SUBREDDIT_CATEGORIES = ("hot", "top", "new")
+USER_CATEGORIES = ("userhot", "usertop", "usernew")
+TIME_FILTERS = ("hour", "day", "week", "month", "year", "all")
 
 
 class YARS:
-    __slots__ = ("headers", "session", "proxy", "timeout")
+    __slots__ = ("session", "proxy", "timeout")
 
     def __init__(self, proxy=None, timeout=10, random_user_agent=True):
-        self.session = RandomUserAgentSession() if random_user_agent else requests.Session()
+        self.session = (
+            RandomUserAgentSession() if random_user_agent else requests.Session()
+        )
         self.proxy = proxy
         self.timeout = timeout
 
@@ -27,30 +32,37 @@ class YARS:
             backoff_factor=2,  # Exponential backoff
             status_forcelist=[429, 500, 502, 503, 504],
         )
-
         self.session.mount("https://", HTTPAdapter(max_retries=retries))
 
         if proxy:
             self.session.proxies.update({"http": proxy, "https": proxy})
-    def handle_search(self,url, params, after=None, before=None):
+
+    def _get_json(self, url, params=None):
+        """Fetch a URL and return parsed JSON, or None on any failure."""
+        try:
+            response = self.session.get(url, params=params, timeout=self.timeout)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            logger.warning("Request to %s failed: %s", url, e)
+            return None
+        try:
+            return response.json()
+        except ValueError as e:
+            logger.warning("Invalid JSON from %s: %s", url, e)
+            return None
+
+    def handle_search(self, url, params, after=None, before=None):
         if after:
             params["after"] = after
         if before:
             params["before"] = before
 
-        try:
-            response = self.session.get(url, params=params, timeout=self.timeout)
-            response.raise_for_status()
-            logging.info("Search request successful")
-        except Exception as e:
-            if response.status_code != 200:
-                logging.info("Search request unsuccessful due to: %s", e)
-                print(f"Failed to fetch search results: {response.status_code}")
-                return []
+        data = self._get_json(url, params)
+        if data is None:
+            return []
 
-        data = response.json()
         results = []
-        for post in data["data"]["children"]:
+        for post in data.get("data", {}).get("children", []):
             post_data = post["data"]
             results.append(
                 {
@@ -59,34 +71,35 @@ class YARS:
                     "description": post_data.get("selftext", "")[:269],
                 }
             )
-        logging.info("Search Results Retrned %d Results", len(results))
+        logger.info("Search returned %d results", len(results))
         return results
-    def search_reddit(self, query, limit=10, after=None, before=None):
+
+    def search_reddit(self, query, limit=10, after=None, before=None, sort="relevance"):
         url = "https://www.reddit.com/search.json"
-        params = {"q": query, "limit": limit, "sort": "relevance", "type": "link"}
+        params = {"q": query, "limit": limit, "sort": sort, "type": "link"}
         return self.handle_search(url, params, after, before)
-    def search_subreddit(self, subreddit, query, limit=10, after=None, before=None, sort="relevance"):
+
+    def search_subreddit(
+        self, subreddit, query, limit=10, after=None, before=None, sort="relevance"
+    ):
         url = f"https://www.reddit.com/r/{subreddit}/search.json"
-        params = {"q": query, "limit": limit, "sort": "relevance", "type": "link","restrict_sr":"on"}
+        params = {
+            "q": query,
+            "limit": limit,
+            "sort": sort,
+            "type": "link",
+            "restrict_sr": "on",
+        }
         return self.handle_search(url, params, after, before)
 
     def scrape_post_details(self, permalink):
         url = f"https://www.reddit.com{permalink}.json"
+        post_data = self._get_json(url)
+        if post_data is None:
+            return None
 
-        try:
-            response = self.session.get(url, timeout=self.timeout)
-            response.raise_for_status()
-            logging.info("Post details request successful : %s", url)
-        except Exception as e:
-            logging.info("Post details request unsccessful: %e", e)
-            if response.status_code != 200:
-                print(f"Failed to fetch post data: {response.status_code}")
-                return None
-
-        post_data = response.json()
         if not isinstance(post_data, list) or len(post_data) < 2:
-            logging.info("Unexpected post data structre")
-            print("Unexpected post data structure")
+            logger.warning("Unexpected post data structure for %s", url)
             return None
 
         main_post = post_data[0]["data"]["children"][0]["data"]
@@ -94,11 +107,10 @@ class YARS:
         body = main_post.get("selftext", "")
 
         comments = self._extract_comments(post_data[1]["data"]["children"])
-        logging.info("Successfully scraped post: %s", title)
+        logger.info("Successfully scraped post: %s", title)
         return {"title": title, "body": body, "comments": comments}
 
     def _extract_comments(self, comments):
-        logging.info("Extracting comments")
         extracted_comments = []
         for comment in comments:
             if isinstance(comment, dict) and comment.get("kind") == "t1":
@@ -106,7 +118,7 @@ class YARS:
                 extracted_comment = {
                     "author": comment_data.get("author", ""),
                     "body": comment_data.get("body", ""),
-                    "score": comment_data.get("score",""),
+                    "score": comment_data.get("score", 0),
                     "replies": [],
                 }
 
@@ -116,142 +128,102 @@ class YARS:
                         replies.get("data", {}).get("children", [])
                     )
                 extracted_comments.append(extracted_comment)
-        logging.info("Successfully extracted comments")
         return extracted_comments
 
     def scrape_user_data(self, username, limit=10):
-        logging.info("Scraping user data for %s, limit: %d", username, limit)
+        logger.info("Scraping user data for %s, limit: %d", username, limit)
         base_url = f"https://www.reddit.com/user/{username}/.json"
-        params = {"limit": limit, "after": None}
+        after = None
         all_items = []
-        count = 0
 
-        while count < limit:
-            try:
-                response = self.session.get(
-                    base_url, params=params, timeout=self.timeout
-                )
-                response.raise_for_status()
-                logging.info("User data request successful")
-            except Exception as e:
-                logging.info("User data request unsuccessful: %s", e)
-                if response.status_code != 200:
-                    print(
-                        f"Failed to fetch data for user {username}: {response.status_code}"
-                    )
-                    break
-            try:
-                data = response.json()
-            except ValueError:
-                print(f"Failed to parse JSON response for user {username}.")
+        while len(all_items) < limit:
+            params = {"limit": min(100, limit - len(all_items)), "after": after}
+            data = self._get_json(base_url, params)
+            if data is None:
                 break
 
             if "data" not in data or "children" not in data["data"]:
-                print(
-                    f"No 'data' or 'children' field found in response for user {username}."
-                )
-                logging.info("No 'data' or 'children' field found in response")
+                logger.warning("Unexpected response shape for user %s", username)
                 break
 
             items = data["data"]["children"]
             if not items:
-                print(f"No more items found for user {username}.")
-                logging.info("No more items found for user")
                 break
 
             for item in items:
                 kind = item["kind"]
                 item_data = item["data"]
+                item_url = f"https://www.reddit.com{item_data.get('permalink', '')}"
                 if kind == "t3":
-                    post_url = f"https://www.reddit.com{item_data.get('permalink', '')}"
                     all_items.append(
                         {
                             "type": "post",
                             "title": item_data.get("title", ""),
                             "subreddit": item_data.get("subreddit", ""),
-                            "url": post_url,
+                            "url": item_url,
                             "created_utc": item_data.get("created_utc", ""),
                         }
                     )
                 elif kind == "t1":
-                    comment_url = (
-                        f"https://www.reddit.com{item_data.get('permalink', '')}"
-                    )
                     all_items.append(
                         {
                             "type": "comment",
                             "subreddit": item_data.get("subreddit", ""),
                             "body": item_data.get("body", ""),
                             "created_utc": item_data.get("created_utc", ""),
-                            "url": comment_url,
+                            "url": item_url,
                         }
                     )
-                count += 1
-                if count >= limit:
+                if len(all_items) >= limit:
                     break
 
-            params["after"] = data["data"].get("after")
-            if not params["after"]:
+            after = data["data"].get("after")
+            if not after:
                 break
 
             time.sleep(random.uniform(1, 2))
-            logging.info("Sleeping for random time")
 
-        logging.info("Successfully scraped user data for %s", username)
+        logger.info("Scraped %d items for user %s", len(all_items), username)
         return all_items
 
     def fetch_subreddit_posts(
         self, subreddit, limit=10, category="hot", time_filter="all"
     ):
-        logging.info(
+        logger.info(
             "Fetching subreddit/user posts for %s, limit: %d, category: %s, time_filter: %s",
             subreddit,
             limit,
             category,
             time_filter,
         )
-        if category not in ["hot", "top", "new", "userhot", "usertop", "usernew"]:
-            raise ValueError("Category for Subredit must be either 'hot', 'top', or 'new' or for User must be 'userhot', 'usertop', or 'usernew'")
+        if category not in SUBREDDIT_CATEGORIES + USER_CATEGORIES:
+            raise ValueError(
+                f"Category must be one of {SUBREDDIT_CATEGORIES} for a subreddit "
+                f"or {USER_CATEGORIES} for a user"
+            )
+        if time_filter not in TIME_FILTERS:
+            raise ValueError(f"time_filter must be one of {TIME_FILTERS}")
 
-        batch_size = min(100, limit)
-        total_fetched = 0
+        if category in USER_CATEGORIES:
+            url = f"https://www.reddit.com/user/{subreddit}/submitted/{category[4:]}.json"
+        else:
+            url = f"https://www.reddit.com/r/{subreddit}/{category}.json"
+
         after = None
         all_posts = []
 
-        while total_fetched < limit:
-            if category == "hot":
-                url = f"https://www.reddit.com/r/{subreddit}/hot.json"
-            elif category == "top":
-                url = f"https://www.reddit.com/r/{subreddit}/top.json"
-            elif category == "new":
-                url = f"https://www.reddit.com/r/{subreddit}/new.json"
-            elif category == "userhot":
-                url = f"https://www.reddit.com/user/{subreddit}/submitted/hot.json"
-            elif category == "usertop":
-                url = f"https://www.reddit.com/user/{subreddit}/submitted/top.json"
-            else:
-                url = f"https://www.reddit.com/user/{subreddit}/submitted/new.json"
-
+        while len(all_posts) < limit:
             params = {
-                "limit": batch_size,
+                "limit": min(100, limit - len(all_posts)),
                 "after": after,
                 "raw_json": 1,
                 "t": time_filter,
             }
-            try:
-                response = self.session.get(url, params=params, timeout=self.timeout)
-                response.raise_for_status()
-                logging.info("Subreddit/user posts request successful")
-            except Exception as e:
-                logging.info("Subreddit/user posts request unsuccessful: %s", e)
-                if response.status_code != 200:
-                    print(
-                        f"Failed to fetch posts for subreddit/user {subreddit}: {response.status_code}"
-                    )
-                    break
+            data = self._get_json(url, params)
+            if data is None:
+                break
 
-            data = response.json()
-            posts = data["data"]["children"]
+            posts = data.get("data", {}).get("children", [])
             if not posts:
                 break
 
@@ -264,6 +236,7 @@ class YARS:
                     "score": post_data["score"],
                     "num_comments": post_data["num_comments"],
                     "created_utc": post_data["created_utc"],
+                    "body": post_data.get("selftext", ""),
                 }
                 if post_data.get("post_hint") == "image" and "url" in post_data:
                     post_info["image_url"] = post_data["url"]
@@ -271,12 +244,13 @@ class YARS:
                     post_info["image_url"] = post_data["preview"]["images"][0][
                         "source"
                     ]["url"]
-                if "thumbnail" in post_data and post_data["thumbnail"] != "self":
-                    post_info["thumbnail_url"] = post_data["thumbnail"]
+                thumbnail = post_data.get("thumbnail") or ""
+                # Reddit uses placeholders like "self", "default", "nsfw", "spoiler"
+                if thumbnail.startswith("http"):
+                    post_info["thumbnail_url"] = thumbnail
 
                 all_posts.append(post_info)
-                total_fetched += 1
-                if total_fetched >= limit:
+                if len(all_posts) >= limit:
                     break
 
             after = data["data"].get("after")
@@ -284,7 +258,6 @@ class YARS:
                 break
 
             time.sleep(random.uniform(1, 2))
-            logging.info("Sleeping for random time")
 
-        logging.info("Successfully fetched subreddit posts for %s", subreddit)
+        logger.info("Fetched %d posts for %s", len(all_posts), subreddit)
         return all_posts
