@@ -1,5 +1,5 @@
 {
-  "scraped_at": "2026-06-12T20:01:19.484647+00:00",
+  "scraped_at": "2026-06-12T22:03:22.086490+00:00",
   "subreddits": [
     "reddit",
     "stocktwits"
@@ -7,89 +7,89 @@
   "posts": [],
   "comments": [],
   "ticker_mentions": {
-    "SPCX": 2070,
-    "SPY": 585,
-    "SPCE": 513,
-    "MSFT": 411,
-    "MU": 403,
-    "RKLB": 258,
-    "ASTS": 219,
-    "ADBE": 212,
-    "QQQ": 204,
-    "TSLA": 203,
-    "SNDK": 186,
-    "DTE": 139,
-    "NVDA": 121,
-    "AM": 117,
-    "META": 88,
+    "SPCX": 2106,
+    "SPY": 587,
+    "SPCE": 542,
+    "MSFT": 413,
+    "MU": 389,
+    "RKLB": 270,
+    "ASTS": 223,
+    "TSLA": 215,
+    "QQQ": 196,
+    "SNDK": 188,
+    "DTE": 134,
+    "NVDA": 133,
+    "AM": 107,
+    "META": 89,
+    "ADBE": 85,
     "HOOD": 83,
-    "RDDT": 61,
-    "NBIS": 59,
-    "VOO": 57,
-    "AMD": 55,
-    "ET": 55,
-    "SPXC": 53,
-    "AVGO": 49,
-    "AMZN": 48,
-    "MRVL": 48,
+    "RDDT": 65,
+    "NBIS": 63,
+    "VOO": 60,
+    "AMD": 56,
+    "AMZN": 52,
+    "SPXC": 52,
+    "ET": 51,
     "NOW": 47,
-    "LUNR": 46,
-    "GOOG": 42,
+    "LUNR": 47,
+    "AVGO": 44,
     "YOU": 42,
-    "VTI": 37,
+    "MRVL": 41,
+    "VTI": 38,
+    "GOOG": 36,
     "LFVN": 36,
-    "IT": 32,
-    "CRWV": 31,
-    "RDW": 30,
-    "IBKR": 28,
-    "INTC": 26,
-    "OPEN": 26,
+    "IT": 33,
+    "IBKR": 30,
+    "OPEN": 30,
+    "INTC": 29,
+    "LINK": 29,
+    "CRWV": 29,
+    "RDW": 28,
+    "AAPL": 27,
     "GOOGL": 26,
-    "LINK": 25,
-    "AAPL": 24,
-    "SATS": 22,
-    "ORCL": 21,
-    "NFLX": 20,
-    "ALL": 19,
-    "PLTR": 19,
-    "IWM": 19,
-    "FIG": 19,
-    "ARM": 17,
+    "PLTR": 23,
+    "ALL": 20,
+    "ARM": 20,
+    "NFLX": 18,
+    "IWM": 18,
+    "PL": 18,
+    "SATS": 17,
     "ALAB": 17,
+    "FIG": 17,
     "DFNS": 16
   },
   "ticker_stats": {},
   "subreddit_tickers": {
     "reddit": {
-      "SPCX": 2070,
-      "SPY": 585,
-      "SPCE": 513,
-      "MSFT": 411,
-      "MU": 403,
-      "RKLB": 258,
-      "ASTS": 219,
-      "ADBE": 212,
-      "QQQ": 204,
-      "TSLA": 203,
-      "SNDK": 186,
-      "DTE": 139,
-      "NVDA": 121,
-      "AM": 117,
-      "META": 88,
+      "SPCX": 2106,
+      "SPY": 587,
+      "SPCE": 542,
+      "MSFT": 413,
+      "MU": 389,
+      "RKLB": 270,
+      "ASTS": 223,
+      "TSLA": 215,
+      "QQQ": 196,
+      "SNDK": 188,
+      "DTE": 134,
+      "NVDA": 133,
+      "AM": 107,
+      "META": 89,
+      "ADBE": 85,
       "HOOD": 83,
-      "RDDT": 61,
-      "NBIS": 59,
-      "VOO": 57,
-      "AMD": 55
+      "RDDT": 65,
+      "NBIS": 63,
+      "VOO": 60,
+      "AMD": 56
     },
     "stocktwits": {}
   },
   "subreddit_stats": {
     "reddit": {
-      "post_count": 6984,
-      "avg_score": 992.6,
+      "post_count": 6935,
+      "avg_score": 873.8,
       "avg_comments": 0,
-      "total_score": 49628
+      "total_score": 43690
     },
     "stocktwits": {
       "post_count": 0,
@@ -100,124 +100,130 @@
   },
   "yahoo_trending": [
     "SPCX",
-    "SPCL",
-    "CAST",
-    "BYAH",
-    "CUPR",
     "ROKU",
-    "DXYZ",
-    "SPXC",
+    "CAST",
+    "SPCL",
+    "CUPR",
+    "BYAH",
+    "PLCE",
     "SPACZZX",
-    "RKLB",
-    "MAAS",
-    "AXTI",
-    "SRXH",
     "DFNS",
-    "UBXG",
-    "SPACEX39501-USD",
+    "AIDX",
+    "SRXH",
+    "ASBP",
     "VYX",
+    "ALMS",
+    "SPXC",
+    "SPACEX39501-USD",
+    "UBXG",
+    "POW.TO",
     "SPACEX-USD",
-    "SFX35679-USD",
-    "VSME"
+    "SFX35679-USD"
   ],
   "ai_analysis": {
     "sentiment": {
       "overall": "bullish",
       "confidence": 65,
-      "reasoning": "The surge in mentions for SpaceX (SPCX) and space-related stocks like Virgin Galactic (SPCE) and Rocket Lab (RKLB) suggests strong retail enthusiasm for the space sector. However, the drop in NVIDIA (NVDA) mentions and mixed signals from other tech giants indicate caution, so the overall mood is cautiously bullish."
+      "reasoning": "The surge in mentions for SpaceX-related tickers like SPCX and SPCE, along with space stocks RKLB and ASTS, suggests strong retail enthusiasm for the space sector. However, the drop in mentions for major tech names like MSFT and NVDA indicates some rotation, keeping overall sentiment cautiously bullish."
     },
     "themes": [
       {
         "title": "Space stocks skyrocket",
-        "explanation": "SpaceX (SPCX) mentions exploded from 207 to 2070 in 24 hours, making it the most discussed ticker. This is likely due to a major event or news, and investors are piling into space-related names like Virgin Galactic (SPCE) and Rocket Lab (RKLB). The hype could drive short-term gains but also carries high risk."
+        "explanation": "SpaceX (SPCX) mentions jumped from 279 to 2106, making it the most discussed ticker. Virgin Galactic (SPCE) also saw a huge spike from 41 to 542 mentions. This suggests retail investors are piling into space-related stocks, possibly due to recent news or hype around space exploration."
       },
       {
-        "title": "Tech giants remain in focus",
-        "explanation": "Microsoft (MSFT), Micron (MU), and Adobe (ADBE) are among the most mentioned tech stocks. While MSFT and MU saw stable mentions, ADBE jumped from 71 to 212, possibly due to earnings or product news. Investors are watching these for growth and AI exposure."
+        "title": "Tech giants lose buzz",
+        "explanation": "Microsoft (MSFT) and NVIDIA (NVDA) saw declines in mentions, dropping from 522 to 413 and 166 to 133 respectively. This could indicate that investors are shifting focus away from big tech toward more speculative sectors like space."
       },
       {
-        "title": "ETFs as safe havens",
-        "explanation": "SPY and QQQ remain highly mentioned, indicating that many investors are using broad market ETFs to gain exposure while hedging against individual stock volatility. This suggests a cautious but bullish stance on the overall market."
+        "title": "Small caps gain attention",
+        "explanation": "Rocket Lab (RKLB) and AST SpaceMobile (ASTS) saw mention counts jump from around 40 to 270 and 223 respectively. These smaller companies are benefiting from the space theme and could see increased volatility."
+      },
+      {
+        "title": "ETF interest remains steady",
+        "explanation": "SPY and QQQ continue to be heavily discussed, with mentions holding around 587 and 196. This suggests that while some investors chase individual stocks, many are still focused on broad market exposure."
       },
       {
         "title": "Meme stock resurgence?",
-        "explanation": "Robinhood (HOOD) and Reddit (RDDT) saw significant increases in mentions, hinting at renewed interest in meme stocks. This could be driven by retail traders looking for quick gains, but these stocks are highly volatile."
+        "explanation": "Robinhood (HOOD) and Reddit (RDDT) saw mention increases from 29 to 83 and 23 to 65. This could signal renewed interest in meme stocks or platforms that facilitate retail trading."
       },
       {
-        "title": "Energy and utilities steady",
-        "explanation": "DTE Energy (DTE) and Antero Midstream (AM) have consistent mentions, suggesting steady interest in defensive sectors. Investors may be rotating into these for stability amid market uncertainty."
+        "title": "Earnings season anticipation",
+        "explanation": "Micron (MU) and Adobe (ADBE) remain in the top 15, with MU mentions rising from 319 to 389. Investors may be positioning ahead of earnings reports, especially in the semiconductor space."
       }
     ],
     "tickers_to_watch": [
       {
         "ticker": "SPCX",
         "sentiment": "bullish",
-        "reason": "SpaceX mentions surged 10x in 24 hours, making it the top ticker. The community is extremely bullish, likely due to a major milestone or announcement. However, as a private company, SPCX may refer to a related ETF or speculation, so investors should verify before acting."
+        "reason": "SpaceX mentions exploded from 279 to 2106, making it the top ticker. The community is clearly excited about space, and while SPCX is not a traditional stock (likely a fund or derivative), the hype could spill over to related equities. Watch for any news about SpaceX launches or partnerships."
       },
       {
         "ticker": "SPCE",
         "sentiment": "bullish",
-        "reason": "Virgin Galactic mentions jumped from 37 to 513, ranking 3rd. The space tourism company is riding the coattails of SpaceX hype. Retail traders are piling in, but the stock has been volatile and fundamentals are weak."
+        "reason": "Virgin Galactic mentions jumped from 41 to 542, a 13x increase. This suggests retail traders are piling in, possibly on speculation about space tourism. However, the stock has been volatile, so be cautious."
       },
       {
         "ticker": "RKLB",
         "sentiment": "bullish",
-        "reason": "Rocket Lab mentions increased from 29 to 258, ranking 6th. As a smaller space player, it benefits from sector enthusiasm. The community sees it as a pure-play space stock with growth potential, but it's risky."
+        "reason": "Rocket Lab mentions rose from 42 to 270, indicating growing interest in this smaller space company. The community sees it as a pure-play space stock with potential. Any contract wins or launch successes could drive the price."
       },
       {
-        "ticker": "ADBE",
+        "ticker": "ASTS",
         "sentiment": "bullish",
-        "reason": "Adobe mentions tripled from 71 to 212, likely due to positive earnings or AI product news. The community is optimistic about its creative software and AI integration. This could be a strong buy if fundamentals support the hype."
+        "reason": "AST SpaceMobile mentions increased from 48 to 223. The company is working on satellite-based cellular broadband, which is a hot topic. Investors are betting on its technology, but it's still pre-revenue, so risk is high."
       },
       {
         "ticker": "HOOD",
         "sentiment": "bullish",
-        "reason": "Robinhood mentions rose from 25 to 83, signaling renewed retail interest. The platform is popular among day traders, and any positive news could drive a short-term rally. However, it remains a high-risk stock."
+        "reason": "Robinhood mentions rose from 29 to 83, possibly due to renewed retail trading activity. The platform benefits from market volatility and could see increased usage if the space theme continues. However, regulatory risks remain."
       }
     ],
     "risk_factors": [
       {
-        "title": "Space stock bubble",
-        "explanation": "The massive spike in space-related mentions (SPCX, SPCE, RKLB) could indicate a speculative frenzy. These stocks are often unprofitable and highly volatile. If the hype fades, investors could face sharp losses."
+        "title": "Space sector hype cycle",
+        "explanation": "The massive spike in mentions for space stocks like SPCX and SPCE could be a sign of speculative frenzy. These stocks are often volatile and can drop sharply if news disappoints. Investors should be wary of buying at the peak of hype."
       },
       {
-        "title": "Concentration in tech",
-        "explanation": "Many top tickers are tech stocks (MSFT, MU, NVDA, AMD). A sector-wide downturn or regulatory crackdown could hit these hard. Diversification is key to mitigate this risk."
+        "title": "Concentration in speculative names",
+        "explanation": "The top tickers are dominated by space and small-cap stocks, which are riskier than blue chips. If the broader market turns, these names could fall faster. Diversification is key."
       },
       {
-        "title": "Meme stock volatility",
-        "explanation": "Stocks like HOOD and RDDT are prone to sudden price swings driven by social media sentiment. Retail investors may get caught in pump-and-dump schemes. Only invest money you can afford to lose."
+        "title": "Declining big tech interest",
+        "explanation": "Mentions for MSFT and NVDA are dropping, which might indicate waning confidence in tech leaders. If institutional investors also rotate out, these stocks could underperform."
       },
       {
-        "title": "Overreliance on Reddit sentiment",
-        "explanation": "The data is based on Reddit mentions, which may not reflect institutional or broader market views. Following Reddit hype blindly can lead to poor investment decisions. Always do your own research."
+        "title": "Meme stock revival risk",
+        "explanation": "The rise in HOOD and RDDT mentions suggests a possible return of meme stock behavior. These stocks can be driven by sentiment rather than fundamentals, leading to sudden crashes."
       }
     ],
     "contrarian_views": [
       {
-        "title": "Space stocks are overhyped",
-        "explanation": "Some investors argue that the space sector is not yet profitable and the hype is unsustainable. They point to Virgin Galactic's history of delays and losses. While the long-term potential exists, short-term gains may be fleeting."
+        "title": "Space is overhyped",
+        "explanation": "Some investors argue that space companies are years away from profitability and the current excitement is unjustified. They point to Virgin Galactic's history of delays and high cash burn. This view suggests that the rally may be short-lived."
       },
       {
-        "title": "Tech giants are overvalued",
-        "explanation": "Despite strong mentions, some skeptics believe that Microsoft, NVIDIA, and others are trading at high valuations. They warn that interest rate hikes or slowing growth could trigger a correction. This view has merit given the current macro environment."
+        "title": "Big tech still dominates",
+        "explanation": "Despite lower mentions, MSFT and NVDA have strong fundamentals and are leaders in AI and cloud computing. Contrarians believe the rotation to space is temporary and that tech will rebound. They see the dip in mentions as a buying opportunity."
       },
       {
-        "title": "ETFs are not always safe",
-        "explanation": "While SPY and QQQ are popular, some contrarians note that broad market ETFs can still suffer in a downturn. They argue that active management or sector-specific ETFs may offer better risk-adjusted returns."
+        "title": "ETFs are safer bet",
+        "explanation": "While many chase individual stocks, some investors prefer SPY and QQQ for diversification. They argue that the space theme is too risky and that broad market ETFs offer steady growth with less volatility."
       }
     ],
     "sector_breakdown": {
-      "Technology": 45,
-      "Space": 30,
-      "ETFs": 15,
-      "Energy": 5,
-      "Utilities": 5
+      "Space": 2921,
+      "Technology": 1541,
+      "Semiconductors": 578,
+      "ETFs": 843,
+      "Energy": 241,
+      "Social Media/Platforms": 237,
+      "Other": 134
     },
     "discussion_digest": [
-      "The biggest story today is the explosion of interest in SpaceX (SPCX), with mentions jumping from 207 to 2070 in just 24 hours. This has lifted other space stocks like Virgin Galactic (SPCE) and Rocket Lab (RKLB), which saw mentions rise from 37 to 513 and 29 to 258 respectively. The community is buzzing about a potential space race, but skeptics warn that these companies are still unprofitable and the hype may be overdone.",
-      "Beyond space, tech stocks like Adobe (ADBE) and Micron (MU) are drawing attention. ADBE mentions tripled to 212, possibly due to strong earnings or AI product launches. Meanwhile, NVIDIA (NVDA) dropped from 187 to 121 mentions, suggesting some profit-taking or shift in focus. ETFs like SPY and QQQ remain steady, indicating that many investors are hedging their bets with broad market exposure.",
-      "There's a clear divide between bulls and bears on meme stocks like Robinhood (HOOD) and Reddit (RDDT). HOOD mentions rose from 25 to 83, and RDDT from 22 to 61, signaling renewed retail enthusiasm. However, critics argue these stocks are highly speculative and driven by short-term sentiment. The tension between FOMO and caution is palpable, and the next few days could see sharp moves in either direction."
+      "The biggest story today is the explosion of interest in space stocks. SpaceX-related ticker SPCX saw mentions skyrocket from 279 to 2106, making it the most discussed stock on Reddit. Virgin Galactic (SPCE) also surged from 41 to 542 mentions, while Rocket Lab (RKLB) and AST SpaceMobile (ASTS) saw similar spikes. The community is clearly betting on a space renaissance, but skeptics warn that these companies are still speculative and unprofitable.",
+      "Beyond space, there's notable chatter around Robinhood (HOOD) and Reddit (RDDT), with mentions rising from 29 to 83 and 23 to 65 respectively. This could signal a return of retail traders to these platforms. Meanwhile, big tech names like Microsoft (MSFT) and NVIDIA (NVDA) saw declines in mentions, suggesting a rotation away from mega-caps. Micron (MU) held steady, possibly due to earnings anticipation.",
+      "The crowd is divided on whether the space rally is sustainable. Bulls point to the rapid mention growth and argue that space is the next big investment theme. Bears counter that these stocks are highly volatile and driven by hype, not fundamentals. The tension is highest around SPCX, which isn't a traditional stock but a proxy for SpaceX. This uncertainty means investors should be cautious and not chase the momentum blindly."
     ],
     "overlooked_insights": [],
     "catalysts": [],
