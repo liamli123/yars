@@ -39,8 +39,16 @@ USER_AGENT = (
 TOP_TICKERS = 50      # tickers tracked from ApeWisdom
 DETAIL_TICKERS = 12   # tickers that get Stocktwits messages + AI deep-dives
 
-session = requests.Session()
-session.headers["User-Agent"] = USER_AGENT
+# Stocktwits sits behind Cloudflare, which fingerprints python-requests and
+# blocks it from datacenter IPs (e.g. GitHub Actions). curl_cffi impersonates
+# a real Chrome browser at the TLS level and usually passes.
+try:
+    from curl_cffi import requests as cffi_requests
+    session = cffi_requests.Session(impersonate="chrome")
+    print("(using curl_cffi browser impersonation)")
+except ImportError:
+    session = requests.Session()
+    session.headers["User-Agent"] = USER_AGENT
 
 
 def fetch_json(url, what):
@@ -48,7 +56,7 @@ def fetch_json(url, what):
         resp = session.get(url, timeout=15)
         resp.raise_for_status()
         return resp.json()
-    except (requests.RequestException, ValueError) as e:
+    except Exception as e:
         print(f"   ✗ {what} failed: {e}")
         return None
 
@@ -600,6 +608,13 @@ if __name__ == "__main__":
                   f"({bullish} bullish / {bearish} bearish tags)")
             ticker_messages[ticker] = messages
         time.sleep(1)
+
+    total_messages = sum(len(m) for m in ticker_messages.values())
+    if total_messages == 0:
+        print("\n❌ No Stocktwits messages collected - the source is likely")
+        print("   blocking this IP. Aborting WITHOUT writing output so the")
+        print("   previous good data is not overwritten.")
+        sys.exit(1)
 
     print("\n[STEP 3] Fetching Yahoo Finance trending + per-ticker news...")
     yahoo_trending = fetch_yahoo_trending()
