@@ -159,18 +159,26 @@ def make_deepseek_client():
         os.environ.update(env_backup)
 
 
-def deepseek_json(client, prompt, max_tokens):
-    response = client.chat.completions.create(
-        model="deepseek-chat",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3,
-        max_tokens=max_tokens,
-    )
-    raw = response.choices[0].message.content.strip()
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[1]
-        raw = raw.rsplit("```", 1)[0]
-    return json.loads(raw)
+def deepseek_json(client, prompt, max_tokens, retries=2):
+    last_error = None
+    for attempt in range(retries + 1):
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=max_tokens,
+            response_format={"type": "json_object"},
+        )
+        raw = response.choices[0].message.content.strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1]
+            raw = raw.rsplit("```", 1)[0]
+        try:
+            return json.loads(raw)
+        except ValueError as e:
+            last_error = e
+            print(f"   ⚠ Malformed JSON from DeepSeek (attempt {attempt + 1}), retrying...")
+    raise last_error
 
 
 def get_ai_analysis(apewisdom, ticker_messages, yahoo_trending):
@@ -237,7 +245,7 @@ Provide your analysis as JSON with these exact keys:
 Return ONLY valid JSON, no markdown."""
 
     try:
-        analysis = deepseek_json(client, prompt, max_tokens=2000)
+        analysis = deepseek_json(client, prompt, max_tokens=4000)
         print("   ✓ AI analysis complete")
         return analysis
     except Exception as e:
