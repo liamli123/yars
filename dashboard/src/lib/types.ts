@@ -59,6 +59,29 @@ export interface TickerDetail {
   factors: TickerFactor[];
 }
 
+export interface OverlookedInsight {
+  title: string;
+  tickers: string[];
+  insight: string;
+  evidence: string;
+  status: "corroborated" | "unverified-claim" | "speculation";
+  why_overlooked: string;
+}
+
+export interface Catalyst {
+  ticker: string;
+  event: string;
+  when: string;
+  expected_impact: string;
+}
+
+export interface CrowdVsNews {
+  ticker: string;
+  news_narrative: string;
+  crowd_view: string;
+  who_is_right: string;
+}
+
 export interface AiAnalysis {
   sentiment: {
     overall: "bullish" | "bearish" | "neutral";
@@ -71,6 +94,9 @@ export interface AiAnalysis {
   contrarian_views: (ContrarianView | string)[];
   sector_breakdown: Record<string, number>;
   discussion_digest?: string[];
+  overlooked_insights?: OverlookedInsight[];
+  catalysts?: Catalyst[];
+  crowd_vs_news?: CrowdVsNews[];
 }
 
 export interface TickerStat {

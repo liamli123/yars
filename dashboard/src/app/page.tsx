@@ -1,6 +1,7 @@
 import { DashboardData } from "@/lib/types";
 import { getTimelineData, getSubredditTickerData } from "@/lib/data";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import OverlookedSignals from "@/components/dashboard/OverlookedSignals";
 import BuzzBoard from "@/components/dashboard/BuzzBoard";
 import DiscussionDigest from "@/components/dashboard/DiscussionDigest";
 import SentimentDonut from "@/components/dashboard/SentimentDonut";
@@ -27,6 +28,13 @@ export default function Home() {
         messageCount={data.posts.length}
         tickerCount={Object.keys(data.ticker_mentions).length}
         sourceCount={data.subreddits.length}
+      />
+
+      {/* Deep analysis: what the community knows that the news doesn't */}
+      <OverlookedSignals
+        insights={data.ai_analysis.overlooked_insights || []}
+        catalysts={data.ai_analysis.catalysts || []}
+        crowdVsNews={data.ai_analysis.crowd_vs_news || []}
       />
 
       {/* AI market overview */}
