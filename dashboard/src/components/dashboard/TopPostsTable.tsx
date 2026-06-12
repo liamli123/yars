@@ -12,8 +12,8 @@ export default function TopPostsTable({ posts }: { posts: Post[] }) {
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mt-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-white">Top Posts</h2>
-          <p className="text-xs text-gray-500">Top 25 posts by engagement</p>
+          <h2 className="text-lg font-semibold text-white">Top Messages</h2>
+          <p className="text-xs text-gray-500">Top 25 messages by engagement</p>
         </div>
         <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
           <button
@@ -44,7 +44,7 @@ export default function TopPostsTable({ posts }: { posts: Post[] }) {
             <tr className="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-800">
               <th className="text-left py-3 px-2">#</th>
               <th className="text-left py-3 px-2">Title</th>
-              <th className="text-left py-3 px-2">Subreddit</th>
+              <th className="text-left py-3 px-2">Source</th>
               <th className="text-right py-3 px-2">Score</th>
               <th className="text-right py-3 px-2">Comments</th>
               <th className="text-left py-3 px-2">Tickers</th>
@@ -61,7 +61,11 @@ export default function TopPostsTable({ posts }: { posts: Post[] }) {
                 </td>
                 <td className="py-3 px-2 text-gray-200 max-w-xs truncate">
                   <a
-                    href={`https://reddit.com${post.permalink}`}
+                    href={
+                      post.permalink.startsWith("http")
+                        ? post.permalink
+                        : `https://reddit.com${post.permalink}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-violet-400 transition-colors"
@@ -77,7 +81,7 @@ export default function TopPostsTable({ posts }: { posts: Post[] }) {
                       color: SUBREDDIT_COLORS[post.subreddit] || "#6b7280",
                     }}
                   >
-                    r/{post.subreddit}
+                    {post.subreddit}
                   </span>
                 </td>
                 <td className="py-3 px-2 text-right text-gray-300 tabular-nums font-medium">

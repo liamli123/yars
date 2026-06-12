@@ -1,233 +1,224 @@
 #!/usr/bin/env python3
+"""Stock buzz scraper.
+
+Answers "which stocks is the internet talking about most, and why?"
+without scraping Reddit directly (Reddit blocks most IPs now):
+
+- ApeWisdom   - ticker mention counts aggregated across Reddit finance subs
+- Stocktwits  - trending tickers + recent messages, many tagged bullish/bearish
+- Yahoo       - trending tickers by search/view interest
+
+Optionally runs DeepSeek AI analysis over the collected data, then writes
+dashboard/public/data/dashboard_data.json for the Next.js dashboard.
+
+No credentials required. Set DEEPSEEK_API_KEY to enable the AI sections.
+"""
 import json
 import os
 import sys
+import time
 from datetime import datetime, timezone
+
+import requests
+
+# Emoji-safe output on consoles that default to non-UTF-8 codecs (e.g. GBK)
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
-src_path = os.path.join(project_root, "src")
-sys.path.append(src_path)
-
-from yars.yars import YARS
-import pandas as pd
-import re
-import time
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 
-COMPANY_TO_TICKER = {
-    'apple': 'AAPL', 'microsoft': 'MSFT', 'google': 'GOOGL', 'alphabet': 'GOOGL',
-    'amazon': 'AMZN', 'meta': 'META', 'facebook': 'META', 'tesla': 'TSLA',
-    'nvidia': 'NVDA', 'amd': 'AMD', 'netflix': 'NFLX', 'robinhood': 'HOOD',
-    'snapchat': 'SNAP', 'alibaba': 'BABA', 'nio': 'NIO', 'palantir': 'PLTR',
-    'sofi': 'SOFI', 'rivian': 'RIVN', 'lucid': 'LCID', 'gamestop': 'GME',
-    'intel': 'INTC', 'micron': 'MU', 'qualcomm': 'QCOM', 'salesforce': 'CRM',
-    'oracle': 'ORCL', 'uber': 'UBER', 'lyft': 'LYFT', 'coinbase': 'COIN',
-    'block': 'SQ', 'square': 'SQ', 'paypal': 'PYPL', 'visa': 'V',
-    'mastercard': 'MA', 'jpmorgan': 'JPM', 'jp morgan': 'JPM',
-    'goldman': 'GS', 'goldman sachs': 'GS', 'morgan stanley': 'MS',
-    'wells fargo': 'WFC', 'schwab': 'SCHW', 'ford': 'F',
-    'general motors': 'GM', 'toyota': 'TM', 'disney': 'DIS',
-    'comcast': 'CMCSA', 'at&t': 'T', 'verizon': 'VZ', 't-mobile': 'TMUS',
-    'johnson & johnson': 'JNJ', 'pfizer': 'PFE', 'moderna': 'MRNA',
-    'unitedhealth': 'UNH', 'eli lilly': 'LLY', 'lilly': 'LLY',
-    'abbvie': 'ABBV', 'merck': 'MRK', 'walmart': 'WMT', 'costco': 'COST',
-    'target': 'TGT', 'home depot': 'HD', 'lowes': 'LOW', "lowe's": 'LOW',
-    'starbucks': 'SBUX', "mcdonald's": 'MCD', 'mcdonalds': 'MCD',
-    'mcdonald': 'MCD', 'nike': 'NKE', 'exxon': 'XOM', 'chevron': 'CVX',
-    'boeing': 'BA', 'lockheed': 'LMT', 'raytheon': 'RTX',
-    'carvana': 'CVNA', 'spotify': 'SPOT', 'roku': 'ROKU', 'roblox': 'RBLX',
-    'airbnb': 'ABNB', 'draftkings': 'DKNG', 'petrobras': 'PBR',
-    'hims': 'HIMS', 'broadcom': 'AVGO', 'microstrategy': 'MSTR',
-    'berkshire': 'BRK', 'paramount': 'PARA', 'warner bros': 'WBD',
-    'novo nordisk': 'NVO', 'nintendo': 'NTDOY', 'samsung': 'SSNLF',
-    'snowflake': 'SNOW', 'crowdstrike': 'CRWD', 'datadog': 'DDOG',
-    'shopify': 'SHOP', 'twilio': 'TWLO', 'zoom': 'ZM',
-}
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+)
 
-def extract_tickers(text):
-    """Extract stock tickers from $TICKER, bare uppercase tickers, and company names"""
-    if not text:
+TOP_TICKERS = 50      # tickers tracked from ApeWisdom
+DETAIL_TICKERS = 12   # tickers that get Stocktwits messages + AI deep-dives
+
+session = requests.Session()
+session.headers["User-Agent"] = USER_AGENT
+
+
+def fetch_json(url, what):
+    try:
+        resp = session.get(url, timeout=15)
+        resp.raise_for_status()
+        return resp.json()
+    except (requests.RequestException, ValueError) as e:
+        print(f"   ✗ {what} failed: {e}")
+        return None
+
+
+def fetch_apewisdom():
+    """Top Reddit-mentioned tickers, aggregated by apewisdom.io."""
+    data = fetch_json(
+        "https://apewisdom.io/api/v1.0/filter/all-stocks/page/1",
+        "ApeWisdom",
+    )
+    if not data:
         return []
-    text_str = str(text)
-
-    # Match $TICKER format
-    dollar_tickers = re.findall(r'\$([A-Z]{1,5})\b', text_str)
-
-    # Match standalone uppercase tickers (2-5 chars)
-    known_tickers = {
-        'AAPL', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'META', 'TSLA', 'NVDA', 'AMD',
-        'NFLX', 'HOOD', 'SNAP', 'BABA', 'NIO', 'PLTR', 'SOFI', 'RIVN', 'LCID',
-        'GME', 'AMC', 'BB', 'NOK', 'WISH', 'CLOV', 'SPY', 'QQQ', 'IWM', 'DIA',
-        'INTC', 'MU', 'QCOM', 'CRM', 'ORCL', 'UBER', 'LYFT', 'COIN', 'SQ',
-        'PYPL', 'V', 'MA', 'JPM', 'BAC', 'WFC', 'GS', 'MS', 'C', 'SCHW',
-        'F', 'GM', 'TM', 'RIVN', 'DIS', 'CMCSA', 'T', 'VZ', 'TMUS',
-        'JNJ', 'PFE', 'MRNA', 'UNH', 'LLY', 'ABBV', 'BMY', 'MRK',
-        'WMT', 'COST', 'TGT', 'HD', 'LOW', 'SBUX', 'MCD', 'NKE',
-        'XOM', 'CVX', 'COP', 'BP', 'SHEL', 'BA', 'LMT', 'RTX', 'GE',
-        'HIMS', 'CVNA', 'SPOT', 'ROKU', 'RBLX', 'ABNB', 'DKNG',
-        'XLE', 'XLF', 'XLK', 'ARKK', 'VTI', 'VOO', 'SCHD',
-        'PBR', 'VALE', 'MELI', 'SE', 'GRAB', 'NBIS', 'ASTS',
-        'AVGO', 'MSTR', 'BRK', 'PARA', 'WBD', 'NVO', 'SNOW',
-        'CRWD', 'DDOG', 'SHOP', 'TWLO', 'ZM',
-    }
-    bare_tickers = re.findall(r'\b([A-Z]{1,5})\b', text_str)
-    bare_matches = [t for t in bare_tickers if t in known_tickers]
-
-    # Match company names (case-insensitive)
-    text_lower = text_str.lower()
-    name_matches = []
-    for name, ticker in COMPANY_TO_TICKER.items():
-        if name in text_lower:
-            name_matches.append(ticker)
-
-    # Filter common false positives
-    blacklist = {'USD', 'CAD', 'EUR', 'GBP', 'AUD', 'JPY', 'CNY', 'THE', 'ALL',
-                 'FOR', 'ARE', 'NOT', 'BUT', 'HAS', 'HIS', 'HOW', 'ITS', 'MAY',
-                 'NEW', 'NOW', 'OLD', 'SEE', 'WAY', 'WHO', 'DID', 'GET', 'HIM',
-                 'LET', 'SAY', 'SHE', 'TOO', 'USE', 'FDA', 'CEO', 'IPO', 'ETF',
-                 'AI', 'US', 'UK', 'EU', 'GDP', 'CPI', 'FED', 'SEC', 'IRS',
-                 'ATH', 'DD', 'YOLO', 'FOMO', 'IMO', 'PSA', 'TIL', 'ELI',
-                 'AMA', 'ITM', 'OTM', 'ATM', 'IV', 'PE', 'EPS', 'ER', 'PT',
-                 'EDIT', 'RIP', 'FYI', 'BTW', 'LMAO', 'TLDR', 'OG'}
-
-    all_tickers = set(dollar_tickers + bare_matches + name_matches) - blacklist
-    return list(all_tickers)
-
-def scrape_finance():
-    miner = YARS()
-
-    subreddits = ['wallstreetbets', 'stocks', 'investing', 'options', 'StockMarket']
-    all_posts = []
-
-    for sub in subreddits:
-        print(f"\n📊 Scraping r/{sub}...")
-
+    results = []
+    for item in data.get("results", [])[:TOP_TICKERS]:
         try:
-            posts = miner.fetch_subreddit_posts(sub, limit=100, category="hot")
-            print(f"   Found {len(posts)} posts")
-
-            for post in posts:
-                title = post.get('title', '')
-                body = post.get('body', '')
-                full_text = f"{title} {body}"
-
-                all_posts.append({
-                    'subreddit': sub,
-                    'title': title,
-                    'body': body,
-                    'full_text': full_text,
-                    'score': post.get('score', 0),
-                    'num_comments': post.get('num_comments', 0),
-                    'created_utc': post.get('created_utc', ''),
-                    'author': post.get('author', ''),
-                    'permalink': post.get('permalink', ''),
-                    'tickers': extract_tickers(full_text)
-                })
-
-            print(f"   ✓ Processed {len(posts)} posts")
-            time.sleep(3)
-
-        except Exception as e:
-            print(f"   ✗ Error: {e}")
+            results.append({
+                "ticker": item["ticker"],
+                "name": item.get("name", ""),
+                "mentions": int(item.get("mentions") or 0),
+                "upvotes": int(item.get("upvotes") or 0),
+                "rank": int(item.get("rank") or 0),
+                "rank_24h_ago": int(item.get("rank_24h_ago") or 0),
+                "mentions_24h_ago": int(item.get("mentions_24h_ago") or 0),
+            })
+        except (TypeError, ValueError):
             continue
+    return results
 
-    return pd.DataFrame(all_posts)
 
-def get_comments(df, top_n=100):
-    """Get comments from top posts"""
-    miner = YARS()
-    top_posts = df.nlargest(top_n, 'num_comments')
-    all_comments = []
+def fetch_stocktwits_trending():
+    data = fetch_json(
+        "https://api.stocktwits.com/api/2/trending/symbols.json",
+        "Stocktwits trending",
+    )
+    if not data:
+        return []
+    return [s["symbol"] for s in data.get("symbols", []) if s.get("symbol")]
 
-    for idx, post in top_posts.iterrows():
-        permalink = post['permalink']
-        if not permalink:
+
+def fetch_stocktwits_messages(ticker):
+    """Recent discussion messages for one ticker."""
+    data = fetch_json(
+        f"https://api.stocktwits.com/api/2/streams/symbol/{ticker}.json",
+        f"Stocktwits stream for {ticker}",
+    )
+    if not data:
+        return []
+    messages = []
+    for msg in data.get("messages", []):
+        body = msg.get("body", "")
+        if not body:
             continue
-
-        print(f"\nGetting comments: {post['title'][:50]}...")
-
+        sentiment = (
+            (msg.get("entities") or {}).get("sentiment") or {}
+        ).get("basic", "")
+        created = msg.get("created_at", "")
         try:
-            post_data = miner.scrape_post_details(permalink)
-            if not post_data:
-                print("   ✗ Failed to fetch post details, skipping")
-                continue
-            comments = post_data.get('comments', [])
+            created_utc = datetime.strptime(
+                created, "%Y-%m-%dT%H:%M:%SZ"
+            ).replace(tzinfo=timezone.utc).timestamp()
+        except ValueError:
+            created_utc = 0
+        symbols = [s.get("symbol") for s in msg.get("symbols", []) if s.get("symbol")]
+        messages.append({
+            "id": msg.get("id", 0),
+            "body": body,
+            "author": (msg.get("user") or {}).get("username", ""),
+            "likes": int(((msg.get("likes") or {}).get("total")) or 0),
+            "created_utc": created_utc,
+            "sentiment": sentiment,  # "Bullish", "Bearish" or ""
+            "symbols": symbols or [ticker],
+        })
+    return messages
 
-            for comment in comments:
-                comment_text = comment.get('body', '')
-                all_comments.append({
-                    'post_title': post['title'],
-                    'subreddit': post['subreddit'],
-                    'comment': comment_text,
-                    'score': comment.get('score', 0),
-                    'author': comment.get('author', ''),
-                    'tickers': extract_tickers(comment_text)
-                })
 
-            print(f"   ✓ Got {len(comments)} comments")
-            time.sleep(3)
+def fetch_yahoo_trending():
+    data = fetch_json(
+        "https://query1.finance.yahoo.com/v1/finance/trending/US?count=20",
+        "Yahoo trending",
+    )
+    if not data:
+        return []
+    try:
+        quotes = data["finance"]["result"][0]["quotes"]
+    except (KeyError, IndexError, TypeError):
+        return []
+    return [q["symbol"] for q in quotes if q.get("symbol")]
 
-        except Exception as e:
-            print(f"   ✗ Error: {e}")
 
-    return pd.DataFrame(all_comments)
+def sentiment_ratio(messages):
+    bullish = sum(1 for m in messages if m["sentiment"] == "Bullish")
+    bearish = sum(1 for m in messages if m["sentiment"] == "Bearish")
+    return bullish, bearish
 
-def get_ai_analysis(posts_df, ticker_counts, comments_df, subreddits):
-    """Use DeepSeek API to analyze scraped data"""
+
+def make_deepseek_client():
+    from openai import OpenAI
+
+    # Clear proxy env vars that httpx picks up (socks:// not supported)
+    env_backup = {}
+    for key in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY",
+                "http_proxy", "https_proxy", "all_proxy"):
+        if key in os.environ:
+            env_backup[key] = os.environ.pop(key)
+    try:
+        return OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)
+    finally:
+        os.environ.update(env_backup)
+
+
+def deepseek_json(client, prompt, max_tokens):
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.3,
+        max_tokens=max_tokens,
+    )
+    raw = response.choices[0].message.content.strip()
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[1]
+        raw = raw.rsplit("```", 1)[0]
+    return json.loads(raw)
+
+
+def get_ai_analysis(apewisdom, ticker_messages, yahoo_trending):
+    """Overall market analysis via DeepSeek."""
     if not DEEPSEEK_API_KEY:
         print("   ⚠ DEEPSEEK_API_KEY not set, skipping AI analysis")
         return None
     try:
-        from openai import OpenAI
+        client = make_deepseek_client()
     except ImportError:
         print("   ⚠ openai package not installed. Run: pip install openai")
         return None
 
     print("\n🤖 Running DeepSeek AI analysis...")
 
-    import httpx
-    # Clear proxy env vars that httpx picks up (socks:// not supported)
-    env_backup = {}
-    for key in ('HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'http_proxy', 'https_proxy', 'all_proxy'):
-        if key in os.environ:
-            env_backup[key] = os.environ.pop(key)
-    try:
-        client = OpenAI(
-            api_key=DEEPSEEK_API_KEY,
-            base_url=DEEPSEEK_BASE_URL,
-        )
-    finally:
-        os.environ.update(env_backup)
+    top_mentions = [
+        {
+            "ticker": t["ticker"], "name": t["name"], "mentions": t["mentions"],
+            "mentions_24h_ago": t["mentions_24h_ago"],
+            "rank": t["rank"], "rank_24h_ago": t["rank_24h_ago"],
+        }
+        for t in apewisdom[:20]
+    ]
 
-    top_tickers = {k: int(v) for k, v in ticker_counts.head(20).items()} if len(ticker_counts) > 0 else {}
-    top_posts_df = posts_df.nlargest(10, 'score')[['title', 'subreddit', 'score', 'num_comments']]
-    top_posts = json.loads(top_posts_df.to_json(orient='records'))
+    sentiment_summary = {}
+    sample_messages = {}
+    for ticker, messages in ticker_messages.items():
+        bullish, bearish = sentiment_ratio(messages)
+        sentiment_summary[ticker] = {
+            "bullish_tags": bullish, "bearish_tags": bearish,
+            "messages_sampled": len(messages),
+        }
+        top_msgs = sorted(messages, key=lambda m: m["likes"], reverse=True)[:3]
+        sample_messages[ticker] = [m["body"][:200] for m in top_msgs]
 
-    subreddit_summary = {}
-    for sub in subreddits:
-        sub_posts = posts_df[posts_df['subreddit'] == sub]
-        if len(sub_posts) > 0:
-            subreddit_summary[sub] = {
-                'post_count': int(len(sub_posts)),
-                'avg_score': round(float(sub_posts['score'].mean()), 1),
-                'top_titles': sub_posts.nlargest(3, 'score')['title'].tolist()
-            }
+    prompt = f"""Analyze this snapshot of stock discussion across the internet and provide investment insights. Write in plain, conversational English that a regular investor can understand - no jargon without explanation.
 
-    prompt = f"""Analyze this Reddit finance data snapshot and provide investment insights. Write in plain, conversational English that a regular investor can understand — no jargon without explanation.
+Top tickers by Reddit mention count (via ApeWisdom aggregator), with 24h changes:
+{json.dumps(top_mentions, indent=2)}
 
-Top ticker mentions (ticker: count): {json.dumps(top_tickers)}
+Stocktwits community sentiment tags (authors label their own posts bullish/bearish):
+{json.dumps(sentiment_summary, indent=2)}
 
-Top posts by score (upvotes):
-{json.dumps(top_posts, indent=2)}
+Most-liked recent Stocktwits messages per ticker:
+{json.dumps(sample_messages, indent=2)}
 
-Subreddit breakdown:
-{json.dumps(subreddit_summary, indent=2)}
-
-Total posts scraped: {len(posts_df)}
-Total comments scraped: {len(comments_df)}
+Tickers trending on Yahoo Finance (by search/view interest):
+{json.dumps(yahoo_trending)}
 
 Provide your analysis as JSON with these exact keys:
 
@@ -235,130 +226,73 @@ Provide your analysis as JSON with these exact keys:
 
 - "themes": array of 4-6 objects, each with "title" (short label, 3-6 words) and "explanation" (2-3 sentences in plain English describing what people are talking about and why it matters for investors)
 
-- "tickers_to_watch": array of 5 objects, each with "ticker" (string), "sentiment" ("bullish"/"bearish"/"neutral"), and "reason" (2-3 sentences in plain English explaining why this stock is worth watching right now, what the Reddit community thinks, and what could move the price). IMPORTANT: Only pick tickers that are actually mentioned in the top ticker list or discussed in the top posts above. Do NOT recommend tickers from your general knowledge that are not present in this Reddit data.
+- "tickers_to_watch": array of 5 objects, each with "ticker" (string), "sentiment" ("bullish"/"bearish"/"neutral"), and "reason" (2-3 sentences in plain English explaining why this stock is worth watching right now, what the online community thinks, and what could move the price). IMPORTANT: Only pick tickers that actually appear in the data above. Do NOT recommend tickers from your general knowledge that are not present in this data.
 
 - "risk_factors": array of 3-4 objects, each with "title" (short label) and "explanation" (2-3 sentences in plain English explaining the risk and how it could impact regular investors)
 
 - "contrarian_views": array of 2-3 objects, each with "title" (short label) and "explanation" (2-3 sentences in plain English describing what the minority thinks and why their argument has some merit)
 
-- "sector_breakdown": object mapping sector names to mention counts (e.g. "Technology": 45)
+- "sector_breakdown": object mapping sector names to approximate mention counts based on the tickers above (e.g. "Technology": 45)
 
 Return ONLY valid JSON, no markdown."""
 
     try:
-        response = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,
-            max_tokens=2000,
-        )
-
-        raw = response.choices[0].message.content.strip()
-        # Strip markdown code fences if present
-        if raw.startswith("```"):
-            raw = raw.split("\n", 1)[1]
-            raw = raw.rsplit("```", 1)[0]
-
-        analysis = json.loads(raw)
+        analysis = deepseek_json(client, prompt, max_tokens=2000)
         print("   ✓ AI analysis complete")
         return analysis
-
     except Exception as e:
         print(f"   ✗ AI analysis failed: {e}")
         return None
 
-def get_ticker_details(posts_df, comments_df, ticker_counts, ai_analysis=None):
-    """Use DeepSeek API to generate per-ticker summaries and sentiment factors"""
+
+def get_ticker_details(apewisdom, ticker_messages):
+    """Per-ticker ~500 word summaries and sentiment factors via DeepSeek."""
     if not DEEPSEEK_API_KEY:
         print("   ⚠ DEEPSEEK_API_KEY not set, skipping ticker details")
         return {}
     try:
-        from openai import OpenAI
+        client = make_deepseek_client()
     except ImportError:
         print("   ⚠ openai package not installed")
         return {}
 
-    top_tickers = ticker_counts.head(10).index.tolist() if len(ticker_counts) > 0 else []
-
-    # Also include tickers_to_watch from AI analysis so they get details too
-    if ai_analysis and 'tickers_to_watch' in ai_analysis:
-        for t in ai_analysis['tickers_to_watch']:
-            ticker = t.get('ticker', '')
-            if ticker and ticker not in top_tickers:
-                top_tickers.append(ticker)
-
-    if not top_tickers:
+    mentions_by_ticker = {t["ticker"]: t for t in apewisdom}
+    tickers = list(ticker_messages.keys())
+    if not tickers:
         print("   ⚠ No tickers found, skipping ticker details")
         return {}
 
-    print(f"\n🔍 Generating details for {len(top_tickers)} tickers...")
+    print(f"\n🔍 Generating details for {len(tickers)} tickers...")
 
-    # Build per-ticker context from posts and comments
-    ticker_context = {}
-    for ticker in top_tickers:
-        relevant_posts = posts_df[
-            posts_df['tickers'].apply(lambda t: ticker in t if isinstance(t, list) else False) |
-            posts_df['title'].str.contains(rf'\b{ticker}\b', case=False, na=False)
-        ]
-        relevant_comments = pd.DataFrame()
-        if len(comments_df) > 0:
-            relevant_comments = comments_df[
-                comments_df['tickers'].apply(lambda t: ticker in t if isinstance(t, list) else False) |
-                comments_df['comment'].str.contains(rf'\b{ticker}\b', case=False, na=False)
-            ]
-
-        post_samples = []
-        for _, row in relevant_posts.head(8).iterrows():
-            post_samples.append({
-                'title': row['title'],
-                'subreddit': row['subreddit'],
-                'score': int(row['score']),
-                'num_comments': int(row['num_comments']),
-            })
-
-        comment_samples = []
-        if len(relevant_comments) > 0:
-            for _, row in relevant_comments.head(8).iterrows():
-                comment_samples.append({
-                    'comment': str(row.get('comment', ''))[:300],
-                    'subreddit': row.get('subreddit', ''),
-                    'score': int(row['score']),
-                })
-
-        ticker_context[ticker] = {
-            'mention_count': int(ticker_counts.get(ticker, 0)),
-            'total_posts': len(relevant_posts),
-            'total_comments': len(relevant_comments),
-            'posts': post_samples,
-            'comments': comment_samples,
-        }
-
-    # Clear proxy env vars
-    env_backup = {}
-    for key in ('HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'http_proxy', 'https_proxy', 'all_proxy'):
-        if key in os.environ:
-            env_backup[key] = os.environ.pop(key)
-    try:
-        client = OpenAI(
-            api_key=DEEPSEEK_API_KEY,
-            base_url=DEEPSEEK_BASE_URL,
-        )
-    finally:
-        os.environ.update(env_backup)
-
-    # Process tickers in batches of 2 to avoid token limit issues
     all_details = {}
     batch_size = 2
-    for i in range(0, len(top_tickers), batch_size):
-        batch = top_tickers[i:i + batch_size]
-        batch_context = {t: ticker_context[t] for t in batch}
+    for i in range(0, len(tickers), batch_size):
+        batch = tickers[i:i + batch_size]
+        batch_context = {}
+        for ticker in batch:
+            messages = ticker_messages[ticker]
+            bullish, bearish = sentiment_ratio(messages)
+            stats = mentions_by_ticker.get(ticker, {})
+            top_msgs = sorted(messages, key=lambda m: m["likes"], reverse=True)[:10]
+            batch_context[ticker] = {
+                "reddit_mentions_24h": stats.get("mentions", 0),
+                "reddit_mentions_previous_24h": stats.get("mentions_24h_ago", 0),
+                "reddit_rank": stats.get("rank", 0),
+                "stocktwits_bullish_tags": bullish,
+                "stocktwits_bearish_tags": bearish,
+                "messages": [
+                    {"text": m["body"][:300], "likes": m["likes"],
+                     "sentiment_tag": m["sentiment"]}
+                    for m in top_msgs
+                ],
+            }
         print(f"   Processing batch: {', '.join(batch)}...")
 
-        prompt = f"""For each of the following stock tickers, analyze the Reddit community discussion and provide:
+        prompt = f"""For each of the following stock tickers, analyze the online community discussion (Reddit mention stats + Stocktwits messages) and provide:
 1. A ~500-word summary in plain, conversational English about what people are saying, why the stock is getting attention, and what investors should know
 2. Exactly 10 positive factors and 10 negative factors being discussed
 
-Here is the Reddit data for each ticker:
+Here is the data for each ticker:
 {json.dumps(batch_context, indent=2)}
 
 Return JSON with this exact structure (one entry per ticker):
@@ -375,34 +309,20 @@ Return JSON with this exact structure (one entry per ticker):
 Rules:
 - intensity ranges from 1 to 10 for positive factors, -1 to -10 for negative factors
 - Each ticker MUST have exactly 10 positive factors and 10 negative factors (20 total)
-- For tickers with few Reddit mentions, supplement with general market context about that company
+- For tickers with few messages, supplement with general market context about that company
 - Write summaries in plain English a regular investor can understand
 - Factor descriptions should be concise (5-15 words each)
 - Return ONLY valid JSON, no markdown"""
 
         try:
-            response = client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.3,
-                max_tokens=6000,
-            )
-
-            raw = response.choices[0].message.content.strip()
-            if raw.startswith("```"):
-                raw = raw.split("\n", 1)[1]
-                raw = raw.rsplit("```", 1)[0]
-
-            batch_details = json.loads(raw)
-
-            # Attach mention_count from actual data
+            batch_details = deepseek_json(client, prompt, max_tokens=6000)
             for ticker in batch:
                 if ticker in batch_details:
-                    batch_details[ticker]["mention_count"] = int(ticker_counts.get(ticker, 0))
-
+                    batch_details[ticker]["mention_count"] = (
+                        mentions_by_ticker.get(ticker, {}).get("mentions", 0)
+                    )
             all_details.update(batch_details)
             print(f"   ✓ Got details for: {', '.join(batch_details.keys())}")
-
         except Exception as e:
             print(f"   ✗ Batch failed ({', '.join(batch)}): {e}")
 
@@ -412,73 +332,59 @@ Rules:
     return all_details
 
 
-def build_dashboard_data(posts_df, comments_df, ticker_counts, subreddits, ai_analysis, ticker_details=None):
-    """Build the consolidated JSON for the dashboard"""
-    # Per-subreddit stats
-    subreddit_stats = {}
-    for sub in subreddits:
-        sub_posts = posts_df[posts_df['subreddit'] == sub]
-        if len(sub_posts) > 0:
-            subreddit_stats[sub] = {
-                'post_count': int(len(sub_posts)),
-                'avg_score': round(float(sub_posts['score'].mean()), 1),
-                'avg_comments': round(float(sub_posts['num_comments'].mean()), 1),
-                'total_score': int(sub_posts['score'].sum()),
-            }
+def build_dashboard_data(apewisdom, ticker_messages, yahoo_trending, ai_analysis,
+                         ticker_details):
+    sources = ["reddit", "stocktwits"]
 
-    # Per-subreddit ticker breakdown (posts + comments)
-    subreddit_tickers = {}
-    for sub in subreddits:
-        sub_tickers = []
-        sub_posts = posts_df[posts_df['subreddit'] == sub]
-        for tickers in sub_posts['tickers']:
-            if isinstance(tickers, list):
-                sub_tickers.extend(tickers)
-        if len(comments_df) > 0:
-            sub_comments = comments_df[comments_df['subreddit'] == sub]
-            for tickers in sub_comments['tickers']:
-                if isinstance(tickers, list):
-                    sub_tickers.extend(tickers)
-        if sub_tickers:
-            subreddit_tickers[sub] = dict(pd.Series(sub_tickers).value_counts().head(20))
-
-    # Convert posts and comments to plain dicts (drop full_text to save space)
-    posts_list = []
-    for _, row in posts_df.iterrows():
-        posts_list.append({
-            'subreddit': row['subreddit'],
-            'title': row['title'],
-            'body': str(row.get('body', ''))[:500],
-            'score': int(row['score']),
-            'num_comments': int(row['num_comments']),
-            'created_utc': float(row['created_utc']) if row['created_utc'] else 0,
-            'author': row['author'],
-            'permalink': row['permalink'],
-            'tickers': row['tickers'] if isinstance(row['tickers'], list) else [],
-        })
-
-    comments_list = []
-    if len(comments_df) > 0:
-        for _, row in comments_df.iterrows():
-            comments_list.append({
-                'post_title': row['post_title'],
-                'subreddit': row.get('subreddit', ''),
-                'comment': str(row.get('comment', ''))[:500],
-                'score': int(row['score']),
-                'author': row['author'],
-                'tickers': row['tickers'] if isinstance(row['tickers'], list) else [],
+    # Posts list = Stocktwits messages, shaped like the dashboard's Post type
+    posts = []
+    for ticker, messages in ticker_messages.items():
+        for m in messages:
+            author = m["author"]
+            posts.append({
+                "subreddit": "stocktwits",
+                "title": m["body"][:200],
+                "body": m["body"][:500],
+                "score": m["likes"],
+                "num_comments": 0,
+                "created_utc": m["created_utc"],
+                "author": author,
+                "permalink": f"https://stocktwits.com/{author}/message/{m['id']}",
+                "tickers": m["symbols"][:5],
             })
 
-    # Global ticker mentions as dict
-    ticker_dict = dict(zip(
-        ticker_counts.index.tolist(),
-        [int(x) for x in ticker_counts.values.tolist()]
-    )) if len(ticker_counts) > 0 else {}
+    ticker_mentions = {t["ticker"]: t["mentions"] for t in apewisdom}
 
-    # Fallback AI analysis
+    stocktwits_counts = {
+        ticker: len(messages) for ticker, messages in ticker_messages.items()
+    }
+    subreddit_tickers = {
+        "reddit": dict(list(ticker_mentions.items())[:20]),
+        "stocktwits": stocktwits_counts,
+    }
+
+    total_likes = sum(p["score"] for p in posts)
+    subreddit_stats = {
+        "reddit": {
+            "post_count": sum(ticker_mentions.values()),
+            "avg_score": round(
+                sum(t["upvotes"] for t in apewisdom) / max(len(apewisdom), 1), 1
+            ),
+            "avg_comments": 0,
+            "total_score": sum(t["upvotes"] for t in apewisdom),
+        },
+        "stocktwits": {
+            "post_count": len(posts),
+            "avg_score": round(total_likes / max(len(posts), 1), 1),
+            "avg_comments": 0,
+            "total_score": total_likes,
+        },
+    }
+
     if ai_analysis is None:
         ai_analysis = {
-            "sentiment": {"overall": "neutral", "confidence": 0, "reasoning": "AI analysis unavailable"},
+            "sentiment": {"overall": "neutral", "confidence": 0,
+                          "reasoning": "AI analysis unavailable"},
             "themes": [],
             "tickers_to_watch": [],
             "risk_factors": [],
@@ -488,12 +394,13 @@ def build_dashboard_data(posts_df, comments_df, ticker_counts, subreddits, ai_an
 
     return {
         "scraped_at": datetime.now(timezone.utc).isoformat(),
-        "subreddits": subreddits,
-        "posts": posts_list,
-        "comments": comments_list,
-        "ticker_mentions": ticker_dict,
+        "subreddits": sources,
+        "posts": posts,
+        "comments": [],
+        "ticker_mentions": ticker_mentions,
         "subreddit_tickers": subreddit_tickers,
         "subreddit_stats": subreddit_stats,
+        "yahoo_trending": yahoo_trending,
         "ai_analysis": ai_analysis,
         "ticker_details": ticker_details or {},
     }
@@ -501,107 +408,67 @@ def build_dashboard_data(posts_df, comments_df, ticker_counts, subreddits, ai_an
 
 if __name__ == "__main__":
     print("=" * 70)
-    print("🚀 Reddit Finance Scraper")
+    print("🚀 Stock Buzz Scraper (ApeWisdom + Stocktwits + Yahoo)")
     print("=" * 70)
 
-    subreddits = ['wallstreetbets', 'stocks', 'investing', 'options', 'StockMarket']
-
-    # Scrape posts
-    print("\n[STEP 1] Scraping finance subreddits...")
-    posts_df = scrape_finance()
-
-    if len(posts_df) == 0:
-        print("\n❌ No posts scraped - Reddit is likely blocking this IP.")
-        print("   Set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET to use the")
-        print("   official API instead (free app: https://www.reddit.com/prefs/apps)")
+    print("\n[STEP 1] Fetching Reddit ticker mentions via ApeWisdom...")
+    apewisdom = fetch_apewisdom()
+    if not apewisdom:
+        print("\n❌ ApeWisdom returned no data - cannot continue")
         sys.exit(1)
+    print(f"   ✓ Got {len(apewisdom)} tickers")
+    print("\n📈 Top 15 tickers by Reddit mentions:")
+    print("-" * 50)
+    for t in apewisdom[:15]:
+        change = t["mentions"] - t["mentions_24h_ago"]
+        print(f"{t['rank']:3d}. ${t['ticker']:6s} {t['mentions']:5d} mentions "
+              f"({'+' if change >= 0 else ''}{change} vs prev 24h)")
 
-    print(f"\n✅ Total posts: {len(posts_df)}")
+    print("\n[STEP 2] Fetching Stocktwits trending + messages...")
+    st_trending = fetch_stocktwits_trending()
+    print(f"   ✓ Trending on Stocktwits: {', '.join(st_trending[:10]) or 'n/a'}")
 
-    # Save posts CSV
-    posts_df.to_csv('reddit_finance_posts.csv', index=False)
-    print(f"💾 Saved: reddit_finance_posts.csv")
+    # Detail tickers: top ApeWisdom tickers, plus Stocktwits trending overlap
+    detail_tickers = [t["ticker"] for t in apewisdom[:DETAIL_TICKERS]]
+    for ticker in st_trending:
+        if len(detail_tickers) >= DETAIL_TICKERS + 3:
+            break
+        if ticker not in detail_tickers:
+            detail_tickers.append(ticker)
 
-    # Ticker analysis (posts only — will recalculate after comments)
-    all_tickers = []
-    for tickers in posts_df['tickers']:
-        if isinstance(tickers, list):
-            all_tickers.extend(tickers)
+    ticker_messages = {}
+    for ticker in detail_tickers:
+        messages = fetch_stocktwits_messages(ticker)
+        if messages:
+            bullish, bearish = sentiment_ratio(messages)
+            print(f"   ✓ ${ticker}: {len(messages)} messages "
+                  f"({bullish} bullish / {bearish} bearish tags)")
+            ticker_messages[ticker] = messages
+        time.sleep(1)
 
-    ticker_counts = pd.Series(all_tickers).value_counts() if all_tickers else pd.Series(dtype=int)
+    print("\n[STEP 3] Fetching Yahoo Finance trending...")
+    yahoo_trending = fetch_yahoo_trending()
+    print(f"   ✓ Trending on Yahoo: {', '.join(yahoo_trending[:10]) or 'n/a'}")
 
-    if len(ticker_counts) > 0:
-        print("\n📈 Top 15 Tickers Mentioned:")
-        print("-" * 40)
-        for i, (ticker, count) in enumerate(ticker_counts.head(15).items(), 1):
-            print(f"{i:2d}. ${ticker:5s} - {count:3d} mentions")
+    print("\n[STEP 4] Running AI analysis...")
+    ai_analysis = get_ai_analysis(apewisdom, ticker_messages, yahoo_trending)
 
-        ticker_df = pd.DataFrame({
-            'ticker': ticker_counts.index,
-            'mentions': ticker_counts.values
-        })
-        ticker_df.to_csv('ticker_mentions.csv', index=False)
-        print(f"\n💾 Saved: ticker_mentions.csv")
+    print("\n[STEP 4b] Generating per-ticker details...")
+    ticker_details = get_ticker_details(apewisdom, ticker_messages)
 
-    # Get comments
-    print("\n[STEP 2] Getting comments from top 100 posts...")
-    comments_df = get_comments(posts_df, top_n=100)
+    print("\n[STEP 5] Building dashboard data...")
+    dashboard_data = build_dashboard_data(
+        apewisdom, ticker_messages, yahoo_trending, ai_analysis, ticker_details
+    )
 
-    if len(comments_df) > 0:
-        comments_df.to_csv('reddit_comments.csv', index=False)
-        print(f"\n✅ Comments scraped: {len(comments_df)}")
-        print(f"💾 Saved: reddit_comments.csv")
-
-    # Recalculate ticker counts including comments
-    all_tickers = []
-    for tickers in posts_df['tickers']:
-        if isinstance(tickers, list):
-            all_tickers.extend(tickers)
-    if len(comments_df) > 0:
-        for tickers in comments_df['tickers']:
-            if isinstance(tickers, list):
-                all_tickers.extend(tickers)
-
-    ticker_counts = pd.Series(all_tickers).value_counts() if all_tickers else pd.Series(dtype=int)
-
-    if len(ticker_counts) > 0:
-        print("\n📈 Top 15 Tickers (posts + comments):")
-        print("-" * 40)
-        for i, (ticker, count) in enumerate(ticker_counts.head(15).items(), 1):
-            print(f"{i:2d}. ${ticker:5s} - {count:3d} mentions")
-
-    # AI Analysis
-    print("\n[STEP 3] Running AI analysis...")
-    ai_analysis = get_ai_analysis(posts_df, ticker_counts, comments_df, subreddits)
-
-    # Per-ticker details
-    print("\n[STEP 3b] Generating per-ticker details...")
-    ticker_details = get_ticker_details(posts_df, comments_df, ticker_counts, ai_analysis)
-
-    # Build and save dashboard JSON
-    print("\n[STEP 4] Building dashboard data...")
-    dashboard_data = build_dashboard_data(posts_df, comments_df, ticker_counts, subreddits, ai_analysis, ticker_details)
-
-    # Save to dashboard/public/data/ if it exists, otherwise save locally
     dashboard_dir = os.path.join(project_root, "dashboard", "public", "data")
     if os.path.isdir(dashboard_dir):
         output_path = os.path.join(dashboard_dir, "dashboard_data.json")
     else:
         output_path = os.path.join(current_dir, "dashboard_data.json")
 
-    import numpy as np
-    class NumpyEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if isinstance(obj, (np.integer,)):
-                return int(obj)
-            if isinstance(obj, (np.floating,)):
-                return float(obj)
-            if isinstance(obj, np.ndarray):
-                return obj.tolist()
-            return super().default(obj)
-
-    with open(output_path, 'w') as f:
-        json.dump(dashboard_data, f, indent=2, cls=NumpyEncoder)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(dashboard_data, f, indent=2)
     print(f"💾 Saved: {output_path}")
 
     print("\n" + "=" * 70)

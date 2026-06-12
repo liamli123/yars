@@ -20,7 +20,7 @@ export default function SubredditTickerChart({ data, subreddits }: Props) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 mt-6">
       <h2 className="text-lg font-semibold text-white mb-1">
-        Ticker Mentions by Subreddit
+        Ticker Mentions by Source
       </h2>
       <p className="text-xs text-gray-500 mb-4">
         Where each ticker is being discussed most
@@ -45,7 +45,7 @@ export default function SubredditTickerChart({ data, subreddits }: Props) {
             <Bar
               key={sub}
               dataKey={sub}
-              name={`r/${sub}`}
+              name={sub}
               fill={SUBREDDIT_COLORS[sub] || "#6b7280"}
               radius={[4, 4, 0, 0]}
               stackId="stack"

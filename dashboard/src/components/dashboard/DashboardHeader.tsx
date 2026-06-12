@@ -4,12 +4,12 @@ import { useState } from "react";
 
 interface Props {
   scrapedAt: string;
-  postCount: number;
-  commentCount: number;
-  subredditCount: number;
+  messageCount: number;
+  tickerCount: number;
+  sourceCount: number;
 }
 
-export default function DashboardHeader({ scrapedAt, postCount, commentCount, subredditCount }: Props) {
+export default function DashboardHeader({ scrapedAt, messageCount, tickerCount, sourceCount }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const date = new Date(scrapedAt);
@@ -23,9 +23,9 @@ export default function DashboardHeader({ scrapedAt, postCount, commentCount, su
   });
 
   const stats = [
-    { label: "Posts Scraped", value: postCount },
-    { label: "Comments", value: commentCount },
-    { label: "Subreddits", value: subredditCount },
+    { label: "Messages Collected", value: messageCount },
+    { label: "Tickers Tracked", value: tickerCount },
+    { label: "Sources", value: sourceCount },
   ];
 
   async function triggerScrape() {
@@ -50,10 +50,10 @@ export default function DashboardHeader({ scrapedAt, postCount, commentCount, su
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
-            Reddit Finance Dashboard
+            Stock Buzz Dashboard
           </h1>
           <p className="text-gray-400 mt-1 text-sm">
-            Powered by YARS + DeepSeek AI
+            Reddit + Stocktwits + Yahoo trends, analyzed by DeepSeek AI
           </p>
         </div>
         <div className="flex items-center gap-4">

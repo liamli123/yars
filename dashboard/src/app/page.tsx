@@ -27,9 +27,9 @@ export default function Home() {
     <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto">
       <DashboardHeader
         scrapedAt={data.scraped_at}
-        postCount={data.posts.length}
-        commentCount={data.comments.length}
-        subredditCount={data.subreddits.length}
+        messageCount={data.posts.length}
+        tickerCount={Object.keys(data.ticker_mentions).length}
+        sourceCount={data.subreddits.length}
       />
 
       {/* AI Insights */}
@@ -60,7 +60,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="mt-8 py-4 border-t border-gray-800 text-center text-xs text-gray-600">
-        Built with YARS (Yet Another Reddit Scraper) + DeepSeek AI
+        Data: ApeWisdom (Reddit) + Stocktwits + Yahoo Finance · AI: DeepSeek
       </footer>
     </main>
   );

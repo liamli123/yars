@@ -19,13 +19,11 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install requests pygments pandas openai
+        run: pip install requests openai
 
       - name: Run finance scraper
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
-          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
         run: |
           mkdir -p dashboard/public/data
           cd example

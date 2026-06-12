@@ -73,6 +73,9 @@ export function getSectorData(data: DashboardData) {
 }
 
 export const SUBREDDIT_COLORS: Record<string, string> = {
+  reddit: "#ff4500",
+  stocktwits: "#3b82f6",
+  yahoo: "#8b5cf6",
   wallstreetbets: "#8b5cf6",
   stocks: "#3b82f6",
   investing: "#10b981",
