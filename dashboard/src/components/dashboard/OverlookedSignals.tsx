@@ -108,12 +108,12 @@ export default function OverlookedSignals({
               {catalysts.map((c, i) => (
                 <div
                   key={i}
-                  className="flex gap-3 items-start bg-gray-800/30 border border-gray-800 rounded-lg p-3"
+                  className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-start bg-gray-800/30 border border-gray-800 rounded-lg p-3"
                 >
-                  <span className="text-xs font-semibold text-gray-300 bg-gray-800 px-2 py-1 rounded shrink-0">
+                  <span className="text-xs font-semibold text-gray-300 bg-gray-800 px-2 py-1 rounded shrink-0 self-start">
                     {c.when}
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm text-gray-200">
                       <span className="text-violet-300 font-medium">
                         ${c.ticker}
